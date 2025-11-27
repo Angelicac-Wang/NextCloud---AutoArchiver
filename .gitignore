@@ -1,0 +1,29 @@
+# Docker volumes
+db_data/
+nextcloud_data/
+
+# Nextcloud data directory
+data/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+
+# Environment files
+.env
+.env.local
+
