@@ -90,6 +90,7 @@ body[data-app="files"] {
 
     /* 主要配色 */
     --color-main-background: #FFF8E7 !important; /* 暖黃色宮牆背景 */
+    --color-main-background-blur: rgba(255, 248, 231, 0.7) !important; /* 側邊欄半透明背景 */
     --color-main-text: #3B1E06 !important; /* 深棕色墨色 */
     --color-primary: #D4AF37 !important; /* 皇家金色 */
     --color-primary-element: #D4AF37 !important;
@@ -119,10 +120,9 @@ body[data-app="files"] {
     background-color: transparent !important;
 }
 
-/* Files 內部容器設為透明 */
+/* Files 內部容器 - 保持背景圖可見 */
 body[data-app="files"] #content-vue,
-body[data-app="files"] #content,
-body[data-app="files"] #app-content-vue {
+body[data-app="files"] #content {
     background: transparent !important;
 }
 
@@ -152,31 +152,37 @@ body[data-app="files"] button.primary:hover {
 }
 
 /* 5. 側邊欄（app-navigation）金色裝飾 */
-body[data-app="files"] #app-navigation {
-    background-color: rgba(255, 248, 231, 0.95) !important;
+body[data-app="files"] #app-navigation,
+body[data-app="files"] .app-navigation-personal,
+body[data-app="files"] .app-navigation-administration {
+    background-color: rgba(255, 248, 231, 0.7) !important;
     border-right: 2px solid #D4AF37 !important;
     box-shadow: 2px 0 4px rgba(212, 175, 55, 0.2);
 }
 
-/* 側邊欄項目文字顏色 */
+/* 側邊欄項目預設樣式 */
+body[data-app="files"] #app-navigation li,
 body[data-app="files"] #app-navigation li a,
 body[data-app="files"] #app-navigation li a span,
 body[data-app="files"] #app-navigation .app-navigation-entry-link {
     color: #3B1E06 !important;
+    background-color: transparent !important;
 }
 
 /* Hover 效果 - 金色半透明背景 */
+body[data-app="files"] #app-navigation li:hover,
 body[data-app="files"] #app-navigation li a:hover,
 body[data-app="files"] #app-navigation li a:focus,
 body[data-app="files"] #app-navigation .app-navigation-entry-link:hover {
-    background-color: rgba(212, 175, 55, 0.15) !important;
+    background-color: rgba(212, 175, 55, 0.2) !important;
 }
 
 /* Active 狀態 - 金色背景 + 左側強調線 */
+body[data-app="files"] #app-navigation li.active,
 body[data-app="files"] #app-navigation li a.active,
 body[data-app="files"] #app-navigation li.active > a,
 body[data-app="files"] #app-navigation .app-navigation-entry-link.active {
-    background-color: rgba(212, 175, 55, 0.3) !important;
+    background-color: rgba(212, 175, 55, 0.4) !important;
     border-left: 3px solid #D4AF37 !important;
     font-weight: bold;
 }
@@ -198,18 +204,24 @@ body[data-app="files"] #app-navigation .icon {
     color: #3B1E06 !important;
 }
 
-/* 6. Files 列表區域半透明背景 */
-body[data-app="files"] .files-list {
-    background-color: rgba(255, 248, 231, 0.95) !important;
+/* 6. 內容區域整體背景 - 包含工具列和檔案列表 */
+body[data-app="files"] #app-content,
+body[data-app="files"] #app-content-vue {
+    background-color: rgba(255, 248, 231, 0.9) !important;
     backdrop-filter: blur(10px);
-    border-radius: 10px;
-    padding: 10px;
-    border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
-/* 7. 內容區域樣式 */
-body[data-app="files"] #app-content {
-    background-color: rgba(255, 248, 231, 0.8) !important;
+/* 7. Files 列表區域半透明背景 */
+body[data-app="files"] .files-list {
+    background-color: transparent !important;
+}
+
+/* 8. 上方工具列（所有檔案、新增等按鈕區域）- 稍微深一點 */
+body[data-app="files"] .files-controls,
+body[data-app="files"] #app-content-vue > header {
+    background-color: rgba(255, 248, 231, 0.95) !important;
+    border-bottom: 2px solid rgba(212, 175, 55, 0.4);
+    padding: 10px;
 }
 
 /* ==================== Photos 背景 ==================== */
