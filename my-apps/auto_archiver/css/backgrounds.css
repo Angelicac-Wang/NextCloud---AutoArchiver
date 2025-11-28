@@ -1,6 +1,13 @@
 /* ==================== 通用背景覆蓋設定 ==================== */
 /* 覆蓋 Nextcloud Theming 的背景系統 */
 
+/* ==================== 全域 Header 樣式 ==================== */
+/* 預設紅色半透明背景 */
+#header {
+    background-color: rgba(220, 38, 38, 0.5) !important;
+    backdrop-filter: blur(10px);
+}
+
 /* ==================== 預設背景（避免閃爍） ==================== */
 /* 在 JavaScript 設定 data-app 之前，先套用預設背景 */
 /* 使用較低優先級，會被具體分頁的背景覆蓋 */
@@ -71,12 +78,33 @@ body[data-app="dashboard"] #app-dashboard > * {
     z-index: 1;
 }
 
-/* ==================== Files 背景 ==================== */
-/* 1. 覆蓋 CSS 變數 - 只針對 Files */
+/* ==================== Files 背景 - 帝殿主題 ==================== */
+/* 🏛️ Imperial Palace Theme - 華麗、富貴、皇家氣派 */
+
+/* 1. 覆蓋 CSS 變數 - 帝殿主題配色 */
 body#body-user[data-app="files"],
 body[data-app="files"] {
+    /* 背景圖片 */
     --image-background: url('../public/files_bg.png') !important;
     --color-background-plain: transparent !important;
+
+    /* 主要配色 */
+    --color-main-background: #FFF8E7 !important; /* 暖黃色宮牆背景 */
+    --color-main-text: #3B1E06 !important; /* 深棕色墨色 */
+    --color-primary: #D4AF37 !important; /* 皇家金色 */
+    --color-primary-element: #D4AF37 !important;
+    --color-primary-text: #3B1E06 !important;
+    --color-primary-element-text: #3B1E06 !important;
+
+    /* 強調色 */
+    --color-error: #C8102E !important; /* 朱紅色 */
+    --color-warning: #D4AF37 !important; /* 金色 */
+    --color-success: #46ba61 !important;
+
+    /* 邊框顏色 - 金色系 */
+    --color-border: #D4AF37 !important;
+    --color-border-dark: #8B6914 !important;
+    --color-border-maxcontrast: #C19B28 !important;
 }
 
 /* 2. 直接覆蓋 body 和 html 的背景屬性（最高優先級） */
@@ -103,12 +131,85 @@ body[data-app="files"] .wrapper {
     background: transparent !important;
 }
 
-/* Files 列表區域半透明背景（可選，如果你想要列表有半透明效果） */
+/* 3. Header 朱紅色漸變背景（帝殿特色） */
+body[data-app="files"] #header {
+    background: linear-gradient(135deg, #C8102E 0%, #A0082A 100%) !important;
+    box-shadow: 0 2px 8px rgba(200, 16, 46, 0.3);
+}
+
+/* 4. 主要按鈕金色漸變 */
+body[data-app="files"] .button,
+body[data-app="files"] button.primary,
+body[data-app="files"] .primary-action {
+    background: linear-gradient(135deg, #D4AF37 0%, #C19B28 100%) !important;
+    color: #3B1E06 !important;
+    border: 1px solid #8B6914 !important;
+}
+
+body[data-app="files"] .button:hover,
+body[data-app="files"] button.primary:hover {
+    background: linear-gradient(135deg, #E5C048 0%, #D4AF37 100%) !important;
+}
+
+/* 5. 側邊欄（app-navigation）金色裝飾 */
+body[data-app="files"] #app-navigation {
+    background-color: rgba(255, 248, 231, 0.95) !important;
+    border-right: 2px solid #D4AF37 !important;
+    box-shadow: 2px 0 4px rgba(212, 175, 55, 0.2);
+}
+
+/* 側邊欄項目文字顏色 */
+body[data-app="files"] #app-navigation li a,
+body[data-app="files"] #app-navigation li a span,
+body[data-app="files"] #app-navigation .app-navigation-entry-link {
+    color: #3B1E06 !important;
+}
+
+/* Hover 效果 - 金色半透明背景 */
+body[data-app="files"] #app-navigation li a:hover,
+body[data-app="files"] #app-navigation li a:focus,
+body[data-app="files"] #app-navigation .app-navigation-entry-link:hover {
+    background-color: rgba(212, 175, 55, 0.15) !important;
+}
+
+/* Active 狀態 - 金色背景 + 左側強調線 */
+body[data-app="files"] #app-navigation li a.active,
+body[data-app="files"] #app-navigation li.active > a,
+body[data-app="files"] #app-navigation .app-navigation-entry-link.active {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+    border-left: 3px solid #D4AF37 !important;
+    font-weight: bold;
+}
+
+/* 側邊欄按鈕和圖示 */
+body[data-app="files"] #app-navigation button,
+body[data-app="files"] #app-navigation .app-navigation-entry-button {
+    color: #3B1E06 !important;
+}
+
+body[data-app="files"] #app-navigation button:hover {
+    background-color: rgba(212, 175, 55, 0.15) !important;
+}
+
+/* 確保圖示也是正確顏色 */
+body[data-app="files"] #app-navigation svg,
+body[data-app="files"] #app-navigation .icon {
+    fill: #3B1E06 !important;
+    color: #3B1E06 !important;
+}
+
+/* 6. Files 列表區域半透明背景 */
 body[data-app="files"] .files-list {
-    background-color: rgba(255, 255, 255, 0.9) !important;
+    background-color: rgba(255, 248, 231, 0.95) !important;
     backdrop-filter: blur(10px);
     border-radius: 10px;
     padding: 10px;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+/* 7. 內容區域樣式 */
+body[data-app="files"] #app-content {
+    background-color: rgba(255, 248, 231, 0.8) !important;
 }
 
 /* ==================== Photos 背景 ==================== */
