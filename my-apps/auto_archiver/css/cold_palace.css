@@ -1,0 +1,215 @@
+/* ==================== Cold Palace 背景 - 冷宮主題 ==================== */
+/* ❄️ Cold Palace Theme - 冷峻、幽靜、封存 */
+
+/* 1. 覆蓋 CSS 變數 - 冷宮主題配色 */
+body#body-user[data-app="cold_palace"],
+body[data-app="cold_palace"] {
+    /* 背景圖片 */
+    --image-background: url('../public/files_bg.png') !important;
+    --color-background-plain: transparent !important;
+
+    /* 主要配色 */
+    --color-main-background: transparent !important; /* 暖黃色宮牆背景 */
+    --color-main-background-blur: rgba(255, 248, 231, 0.5) !important; /* 側邊欄半透明背景 */
+    --color-main-text: #3B1E06 !important; /* 深棕色墨色 */
+    --color-primary: #D4AF37 !important; /* 皇家金色 */
+    --color-primary-element: #D4AF37 !important;
+    --color-primary-text: #3B1E06 !important;
+    --color-primary-element-text: #3B1E06 !important;
+
+    /* 強調色 */
+    --color-error: #C8102E !important; /* 朱紅色 */
+    --color-warning: #D4AF37 !important; /* 金色 */
+    --color-success: #46ba61 !important;
+
+    /* 邊框顏色 - 金色系 */
+    --color-border: #D4AF37 !important;
+    --color-border-dark: #8B6914 !important;
+    --color-border-maxcontrast: #C19B28 !important;
+
+    /* Hover 和互動狀態顏色 */
+    --color-background-hover: rgba(212, 175, 55, 0.3) !important; /* 金色半透明 hover */
+    --color-background-dark: rgba(212, 175, 55, 0.4) !important; /* 金色深色狀態 */
+    --color-primary-element-hover: rgba(212, 175, 55, 0.55) !important; /* Primary 元素 hover - 金色 */
+    --color-primary-element-light: rgba(212, 175, 55, 0.35) !important; /* 金色淺色元素 */
+    --color-primary-element-light-hover: rgba(212, 175, 55, 0.45) !important; /* 淺色元素 hover */
+}
+
+/* 2. 直接覆蓋 body 和 html 的背景屬性（最高優先級） */
+html:has(body[data-app="cold_palace"]),
+body#body-user[data-app="cold_palace"],
+body[data-app="cold_palace"] {
+    background-image: url('../public/files_bg.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    background-color: transparent !important;
+}
+
+/* Cold Palace 內部容器 - 保持背景圖可見 */
+body[data-app="cold_palace"] #content-vue,
+body[data-app="cold_palace"] #content {
+    background: transparent !important;
+}
+
+/* Cold Palace wrapper 容器 */
+body[data-app="cold_palace"] .wrapper {
+    background: transparent !important;
+}
+
+/* 3. Header 朱紅色漸變背景（帝殿特色） - 半透明毛玻璃效果 */
+body[data-app="cold_palace"] #header {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+/* 4. 主要按鈕金色漸變 */
+body[data-app="cold_palace"] .button.primary,
+body[data-app="cold_palace"] button.primary,
+body[data-app="cold_palace"] .primary-action,
+body[data-app="cold_palace"] button[aria-label="新增"],
+body[data-app="cold_palace"] .button--vue-primary,
+body[data-app="cold_palace"] .action-item__menutoggle--primary {
+    background: linear-gradient(135deg, #D4AF37 0%, #C19B28 100%) !important;
+    color: #3B1E06 !important;
+    border: 1px solid #8B6914 !important;
+}
+
+body[data-app="cold_palace"] .button.primary:hover,
+body[data-app="cold_palace"] button.primary:hover,
+body[data-app="cold_palace"] .primary-action:hover,
+body[data-app="cold_palace"] button[aria-label="新增"]:hover,
+body[data-app="cold_palace"] .button--vue-primary:hover {
+    background: linear-gradient(135deg, #E5C048 0%, #D4AF37 100%) !important;
+}
+
+/* 5. 側邊欄（app-navigation）金色裝飾 */
+body[data-app="cold_palace"] #app-navigation,
+body[data-app="cold_palace"] .app-navigation-personal,
+body[data-app="cold_palace"] .app-navigation-administration {
+    background-color: rgba(255, 248, 231, 0.7) !important;
+    border-right: 2px solid #D4AF37 !important;
+    box-shadow: 2px 0 4px rgba(212, 175, 55, 0.2);
+}
+
+/* 側邊欄項目預設樣式 */
+body[data-app="cold_palace"] #app-navigation li,
+body[data-app="cold_palace"] #app-navigation li a,
+body[data-app="cold_palace"] #app-navigation li a span,
+body[data-app="cold_palace"] #app-navigation .app-navigation-entry-link {
+    color: #3B1E06 !important;
+    background-color: transparent !important;
+}
+
+/* Hover 效果 - 金色半透明背景 */
+body[data-app="cold_palace"] #app-navigation li:hover,
+body[data-app="cold_palace"] #app-navigation li a:hover,
+body[data-app="cold_palace"] #app-navigation li a:focus,
+body[data-app="cold_palace"] #app-navigation .app-navigation-entry-link:hover {
+    background-color: rgba(212, 175, 55, 0.2) !important;
+}
+
+/* Active 狀態 - 金色背景 + 左側強調線 */
+body[data-app="cold_palace"] #app-navigation li.active,
+body[data-app="cold_palace"] #app-navigation li a.active,
+body[data-app="cold_palace"] #app-navigation li.active > a,
+body[data-app="cold_palace"] #app-navigation .app-navigation-entry-link.active {
+    background-color: rgba(212, 175, 55, 0.4) !important;
+    border-left: 3px solid #D4AF37 !important;
+    font-weight: bold;
+}
+
+/* 側邊欄按鈕和圖示 */
+body[data-app="cold_palace"] #app-navigation button,
+body[data-app="cold_palace"] #app-navigation .app-navigation-entry-button {
+    color: #3B1E06 !important;
+}
+
+body[data-app="cold_palace"] #app-navigation button:hover {
+    background-color: rgba(212, 175, 55, 0.15) !important;
+}
+
+/* 確保圖示也是正確顏色 */
+body[data-app="cold_palace"] #app-navigation svg,
+body[data-app="cold_palace"] #app-navigation .icon {
+    fill: #3B1E06 !important;
+    color: #3B1E06 !important;
+}
+
+/* 6. 內容區域整體背景 - 包含工具列和檔案列表 */
+body[data-app="cold_palace"] #app-content,
+body[data-app="cold_palace"] #app-content-vue {
+    background-color: rgba(255, 248, 231, 0.6) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* 7. Files 列表區域半透明背景 */
+body[data-app="cold_palace"] .files-list {
+    background-color: transparent !important;
+}
+
+/* 8. 上方工具列（所有檔案、新增等按鈕區域）- 稍微深一點 */
+body[data-app="cold_palace"] .files-controls,
+body[data-app="cold_palace"] #app-content-vue > header {
+    background-color: rgba(255, 248, 231, 0.6) !important;
+    border-bottom: 2px solid rgba(212, 175, 55, 0.4);
+    padding: 10px;
+}
+
+body[data-app="cold_palace"] div.editor.editor-media-handler.text-editor__main,
+body[data-app="cold_palace"] div.files-list__filters,
+body[data-app="cold_palace"] .text-menubar {
+    background-color: transparent !important;
+}
+
+/* 9. 新增按鈕的文字顏色 */
+body[data-app="cold_palace"] .button-vue__text ,
+body[data-app="cold_palace"] .button-vue__icon{
+    color: #3B1E06 !important;
+}
+
+/* 12. Hover 效果統一 - 金色半透明 */
+/* 檔案列表行 hover */
+body[data-app="cold_palace"] .files-list tbody tr:hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 按鈕 hover（除了 primary 按鈕） */
+body[data-app="cold_palace"] button:not(.primary):hover,
+body[data-app="cold_palace"] .button:not(.primary):hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 連結和可點擊元素 hover */
+body[data-app="cold_palace"] a:hover:not(.primary),
+body[data-app="cold_palace"] .clickable:hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 下拉選單項目 hover */
+body[data-app="cold_palace"] .v-popper__inner ul li:hover,
+body[data-app="cold_palace"] .popovermenu li:hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 13. Pop-up 彈出選單不透明背景 */
+/* 確保 pop-up 選單有不透明的底色，避免看到下方內容 */
+body[data-app="cold_palace"] .v-popper__inner,
+body[data-app="cold_palace"] .popovermenu,
+body[data-app="cold_palace"] .bubble,
+body[data-app="cold_palace"] .app-navigation-entry-menu {
+    background-color: rgba(255, 248, 231, 0.98) !important; /* 暖黃色宮牆背景，幾乎不透明 */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(212, 175, 55, 0.3) !important; /* 金色邊框 */
+}
+
+/* Pop-up 選單內的項目文字顏色 */
+body[data-app="cold_palace"] .v-popper__inner ul li,
+body[data-app="cold_palace"] .popovermenu ul li,
+body[data-app="cold_palace"] .popovermenu ul li a,
+body[data-app="cold_palace"] .popovermenu ul li button {
+    color: #3B1E06 !important; /* 深棕色墨色 */
+}

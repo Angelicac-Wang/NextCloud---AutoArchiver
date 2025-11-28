@@ -80,6 +80,31 @@ body[data-app="dashboard"] #app-dashboard > * {
     z-index: 1;
 }
 
+/* Dashboard 中央 Slogan 圖片 */
+body[data-app="dashboard"] #app-dashboard > h2,
+body#body-user.dashboard #app-dashboard > h2 {
+    /* 隱藏原本的「嗨」文字 */
+    font-size: 0 !important;
+    line-height: 0 !important;
+    text-indent: -9999px !important;
+
+    /* 設定容器大小以容納圖片 */
+    width: 100%;
+    max-width: 800px;
+    height: 300px;
+    margin: 200px auto 40px !important;
+
+    /* 加入背景圖片 */
+    background-image: url('../public/slogan.png') !important;
+    background-size: contain !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+
+    /* 確保可見 */
+    display: block !important;
+    overflow: hidden;
+}
+
 /* ==================== Files 背景 - 帝殿主題 ==================== */
 /* 🏛️ Imperial Palace Theme - 華麗、富貴、皇家氣派 */
 

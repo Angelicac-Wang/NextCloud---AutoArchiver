@@ -15,6 +15,9 @@
             if (bodyId === 'body-user' && document.body.classList.contains('dashboard')) {
                 document.body.setAttribute('data-app', 'dashboard');
                 console.log('🏠 Set data-app="dashboard" for background');
+            } else if (path.includes('/apps/auto_archiver')) {
+                document.body.setAttribute('data-app', 'cold_palace');
+                console.log('❄️ Set data-app="cold_palace" for background');
             } else if (path.includes('/apps/files')) {
                 document.body.setAttribute('data-app', 'files');
                 console.log('📁 Set data-app="files" for background');
