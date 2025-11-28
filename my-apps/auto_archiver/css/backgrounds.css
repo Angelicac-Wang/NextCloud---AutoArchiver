@@ -327,21 +327,6 @@ body[data-app="files"] .popovermenu ul li button {
     color: #3B1E06 !important; /* 深棕色墨色 */
 }
 
-/* ==================== Photos 背景 ==================== */
-body#body-user[data-app="photos"],
-html:has(body[data-app="photos"]) {
-    --image-background: url('../public/photos_bg.jpg') !important;
-    --color-background-plain: transparent !important;
-}
-
-body#body-user[data-app="photos"] {
-    background-image: url('../public/photos_bg.jpg') !important;
-    background-size: cover !important;
-    background-position: center !important;
-    background-repeat: no-repeat !important;
-    background-attachment: fixed !important;
-}
-
 /* ==================== Settings 背景 ==================== */
 body#body-user[data-app="settings"],
 html:has(body[data-app="settings"]) {
