@@ -5,7 +5,7 @@
 body#body-user[data-app="cold_palace"],
 body[data-app="cold_palace"] {
     /* 背景圖片 */
-    --image-background: url('../public/files_bg.png') !important;
+    --image-background: url('../public/cold_palace_bg.png') !important;
     --color-background-plain: transparent !important;
 
     /* 主要配色 */
@@ -39,7 +39,7 @@ body[data-app="cold_palace"] {
 html:has(body[data-app="cold_palace"]),
 body#body-user[data-app="cold_palace"],
 body[data-app="cold_palace"] {
-    background-image: url('../public/files_bg.png') !important;
+    background-image: url('../public/cold_palace_bg.png') !important;
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;

@@ -6,7 +6,9 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\Files\Events\Node\BeforeNodeReadEvent;
+use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCA\AutoArchiver\Listener\FileReadListener;
+use OCA\AutoArchiver\Listener\LoadAdditionalScripts;
 use OCP\BackgroundJob\IJobList;
 use OCA\AutoArchiver\Cron\ArchiveOldFiles;
 use OCA\AutoArchiver\Cron\StorageMonitorJob;
@@ -24,6 +26,12 @@ class Application extends App implements IBootstrap {
         $context->registerEventListener(
             BeforeNodeReadEvent::class,
             FileReadListener::class
+        );
+
+        // 註冊 Files app 額外腳本載入事件（用於註冊冷宮區視圖）
+        $context->registerEventListener(
+            LoadAdditionalScriptsEvent::class,
+            LoadAdditionalScripts::class
         );
     }
 

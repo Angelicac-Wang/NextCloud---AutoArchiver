@@ -1,0 +1,22 @@
+{
+  "name": "auto_archiver",
+  "version": "0.1.4",
+  "description": "Auto archiver for Nextcloud",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch"
+  },
+  "dependencies": {
+    "@nextcloud/files": "^3.0.0",
+    "@nextcloud/l10n": "^3.0.0",
+    "@nextcloud/vue": "^8.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.0",
+    "@babel/preset-env": "^7.23.0",
+    "babel-loader": "^9.1.0",
+    "path-browserify": "^1.0.1",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.0"
+  }
+}

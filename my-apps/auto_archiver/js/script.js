@@ -7,35 +7,78 @@
             return;
         }
 
-        if (!document.body.getAttribute('data-app')) {
-            const path = window.location.pathname;
-            const bodyId = document.body.id;
+        const path = window.location.pathname;
+        const search = window.location.search;
+        const bodyId = document.body.id;
+        let newDataApp = null;
 
-            // 優先判斷 body class/id
-            if (bodyId === 'body-user' && document.body.classList.contains('dashboard')) {
-                document.body.setAttribute('data-app', 'dashboard');
-                console.log('🏠 Set data-app="dashboard" for background');
-            } else if (path.includes('/apps/auto_archiver')) {
-                document.body.setAttribute('data-app', 'cold_palace');
-                console.log('❄️ Set data-app="cold_palace" for background');
-            } else if (path.includes('/apps/files')) {
-                document.body.setAttribute('data-app', 'files');
-                console.log('📁 Set data-app="files" for background');
-            } else if (path.includes('/apps/photos')) {
-                document.body.setAttribute('data-app', 'photos');
-                console.log('📷 Set data-app="photos" for background');
-            } else if (path.includes('/settings')) {
-                document.body.setAttribute('data-app', 'settings');
-                console.log('⚙️ Set data-app="settings" for background');
-            } else if (path === '/' || path === '/index.php' || path.includes('/apps/dashboard')) {
-                // 預設首頁也算 Dashboard
-                document.body.setAttribute('data-app', 'dashboard');
-                console.log('🏠 Set data-app="dashboard" for background (homepage)');
-            }
+        // 判斷應該設定哪個 data-app
+        if (bodyId === 'body-user' && document.body.classList.contains('dashboard')) {
+            newDataApp = 'dashboard';
+        } else if (path.includes('/apps/auto_archiver')) {
+            newDataApp = 'cold_palace';
+        } else if (path.includes('/apps/files') && (search.includes('view=cold_palace') || search.includes('dir=%2Farchive') || search.includes('dir=/archive'))) {
+            // Files app 且在冷宮區視圖或 archive 資料夾 -> 冷宮主題
+            newDataApp = 'cold_palace';
+        } else if (path.includes('/apps/files')) {
+            newDataApp = 'files';
+        } else if (path.includes('/apps/photos')) {
+            newDataApp = 'photos';
+        } else if (path.includes('/settings')) {
+            newDataApp = 'settings';
+        } else if (path === '/' || path === '/index.php' || path.includes('/apps/dashboard')) {
+            newDataApp = 'dashboard';
+        }
+
+        // 只有當 data-app 需要改變時才更新
+        const currentDataApp = document.body.getAttribute('data-app');
+        if (newDataApp && currentDataApp !== newDataApp) {
+            document.body.setAttribute('data-app', newDataApp);
+            const icons = {
+                'dashboard': '🏠',
+                'cold_palace': '❄️',
+                'files': '📁',
+                'photos': '📷',
+                'settings': '⚙️'
+            };
+            console.log(`${icons[newDataApp] || '📄'} Set data-app="${newDataApp}" for background`);
         }
     };
 
     setDataApp();
+
+    // 監聽 URL 變化（用於 Files app 內的資料夾切換）
+    // 當切換資料夾時，URL 的 query string 會改變，但不會觸發頁面重載
+    let lastUrl = location.href;
+    const checkUrlChange = function() {
+        const currentUrl = location.href;
+        if (currentUrl !== lastUrl) {
+            console.log('🔄 URL changed from', lastUrl, 'to', currentUrl);
+            lastUrl = currentUrl;
+            // URL 改變時重新檢查 data-app
+            setDataApp();
+        }
+    };
+
+    // 使用 MutationObserver 監聽 history API
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    history.pushState = function() {
+        originalPushState.apply(this, arguments);
+        checkUrlChange();
+    };
+
+    history.replaceState = function() {
+        originalReplaceState.apply(this, arguments);
+        checkUrlChange();
+    };
+
+    // 監聽 popstate（瀏覽器前進/後退）
+    window.addEventListener('popstate', checkUrlChange);
+
+    // 定期檢查（備用方案，以防某些情況下事件未觸發）
+    setInterval(checkUrlChange, 500);
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
