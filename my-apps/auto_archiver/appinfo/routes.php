@@ -11,5 +11,25 @@ return [
             'url' => '/restore/{fileId}',
             'verb' => 'POST',
         ],
+        [
+            'name' => 'Notification#extend',
+            'url' => '/extend/{fileId}',
+            'verb' => 'POST',
+        ],
+        [
+            'name' => 'Notification#extend7Days',
+            'url' => '/extend7days/{fileId}',
+            'verb' => 'POST',
+        ],
+        [
+            'name' => 'Notification#dismiss',
+            'url' => '/dismiss/{fileId}',
+            'verb' => 'DELETE',
+        ],
+        [
+            'name' => 'Notification#getStatistics',
+            'url' => '/statistics',
+            'verb' => 'GET',
+        ],
     ],
 ];

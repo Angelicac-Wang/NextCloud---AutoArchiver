@@ -10,6 +10,8 @@ use OCA\AutoArchiver\Listener\FileReadListener;
 use OCP\BackgroundJob\IJobList;
 use OCA\AutoArchiver\Cron\ArchiveOldFiles;
 use OCA\AutoArchiver\Cron\StorageMonitorJob;
+use OCA\AutoArchiver\Cron\NotificationJob;
+use OCA\AutoArchiver\Notification\Notifier;
 use OCP\Util;
 
 class Application extends App implements IBootstrap {
@@ -25,11 +27,15 @@ class Application extends App implements IBootstrap {
             BeforeNodeReadEvent::class,
             FileReadListener::class
         );
+        
+        // 註冊通知解析器
+        $context->registerNotifierService(Notifier::class);
     }
 
     public function boot(IBootContext $context): void {
         
         Util::addScript('auto_archiver', 'script');
+        Util::addScript('auto_archiver', 'notification');
 
         // 註冊排程工作
         $jobList = $context->getServerContainer()->get(IJobList::class);
@@ -42,6 +48,11 @@ class Application extends App implements IBootstrap {
         // 註冊存儲空間監控任務
         if (!$jobList->has(StorageMonitorJob::class, null)) {
             $jobList->add(StorageMonitorJob::class);
+        }
+        
+        // 註冊通知任務
+        if (!$jobList->has(NotificationJob::class, null)) {
+            $jobList->add(NotificationJob::class);
         }
     }
 }
