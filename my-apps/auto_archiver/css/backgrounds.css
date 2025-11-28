@@ -1,0 +1,141 @@
+/* ==================== 通用背景覆蓋設定 ==================== */
+/* 覆蓋 Nextcloud Theming 的背景系統 */
+
+/* ==================== 預設背景（避免閃爍） ==================== */
+/* 在 JavaScript 設定 data-app 之前，先套用預設背景 */
+/* 使用較低優先級，會被具體分頁的背景覆蓋 */
+html:not(:has(body[data-app])),
+body#body-user:not(.dashboard):not([data-app]) {
+    --image-background: url('../public/files_bg.png') !important;
+    --color-background-plain: transparent !important;
+    background-image: url('../public/files_bg.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    background-color: transparent !important;
+}
+
+/* ==================== Dashboard 背景 ==================== */
+/* 1. 覆蓋 CSS 變數 - 只針對 Dashboard */
+body#body-user.dashboard,
+body#body-user[data-app="dashboard"] {
+    --image-background: url('../public/dashboard_bg.jpg') !important;
+    --color-background-plain: transparent !important;
+}
+
+/* 2. 直接覆蓋 body 和 html 的背景屬性（最高優先級） */
+html:has(body#body-user.dashboard),
+html:has(body#body-user[data-app="dashboard"]),
+body#body-user.dashboard,
+body#body-user[data-app="dashboard"] {
+    background-image: url('../public/dashboard_bg.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    background-color: transparent !important;
+}
+
+/* Dashboard 內部容器設為透明 */
+#body-user.dashboard #content-vue,
+#body-user.dashboard #content,
+#body-user.dashboard #app-dashboard,
+body[data-app="dashboard"] #content-vue,
+body[data-app="dashboard"] #content,
+body[data-app="dashboard"] #app-dashboard {
+    background: transparent !important;
+}
+
+/* 覆蓋 Nextcloud 的 wrapper 容器 */
+#body-user.dashboard .wrapper,
+body[data-app="dashboard"] .wrapper {
+    background: transparent !important;
+}
+
+/* Dashboard 遮罩（讓文字更清楚） */
+body[data-app="dashboard"] #app-dashboard::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 0;
+}
+
+body[data-app="dashboard"] #app-dashboard > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* ==================== Files 背景 ==================== */
+/* 1. 覆蓋 CSS 變數 - 只針對 Files */
+body#body-user[data-app="files"],
+body[data-app="files"] {
+    --image-background: url('../public/files_bg.png') !important;
+    --color-background-plain: transparent !important;
+}
+
+/* 2. 直接覆蓋 body 和 html 的背景屬性（最高優先級） */
+html:has(body[data-app="files"]),
+body#body-user[data-app="files"],
+body[data-app="files"] {
+    background-image: url('../public/files_bg.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    background-color: transparent !important;
+}
+
+/* Files 內部容器設為透明 */
+body[data-app="files"] #content-vue,
+body[data-app="files"] #content,
+body[data-app="files"] #app-content-vue {
+    background: transparent !important;
+}
+
+/* Files wrapper 容器 */
+body[data-app="files"] .wrapper {
+    background: transparent !important;
+}
+
+/* Files 列表區域半透明背景（可選，如果你想要列表有半透明效果） */
+body[data-app="files"] .files-list {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+/* ==================== Photos 背景 ==================== */
+body#body-user[data-app="photos"],
+html:has(body[data-app="photos"]) {
+    --image-background: url('../public/photos_bg.jpg') !important;
+    --color-background-plain: transparent !important;
+}
+
+body#body-user[data-app="photos"] {
+    background-image: url('../public/photos_bg.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+}
+
+/* ==================== Settings 背景 ==================== */
+body#body-user[data-app="settings"],
+html:has(body[data-app="settings"]) {
+    --image-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    --color-background-plain: #667eea !important;
+}
+
+body#body-user[data-app="settings"] {
+    background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* ==================== 其他分頁的預設背景 ==================== */
+/* 如果需要為其他分頁設定背景，可以按照上面的格式添加 */

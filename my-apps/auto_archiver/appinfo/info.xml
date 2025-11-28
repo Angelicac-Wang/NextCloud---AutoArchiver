@@ -10,6 +10,6 @@
     <namespace>AutoArchiver</namespace>
     <category>tools</category>
     <dependencies>
-        <nextcloud min-version="28" max-version="31"/>
+        <nextcloud min-version="28" max-version="33"/>
     </dependencies>
 </info>

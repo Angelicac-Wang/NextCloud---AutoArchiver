@@ -1,3 +1,40 @@
+// 立即執行：偵測並設定 data-app 屬性（在 CSS 載入前執行）
+(function() {
+    const setDataApp = function() {
+        if (!document.body) {
+            // 如果 body 還沒準備好，稍後再試
+            setTimeout(setDataApp, 10);
+            return;
+        }
+
+        if (!document.body.getAttribute('data-app')) {
+            const path = window.location.pathname;
+            const bodyId = document.body.id;
+
+            // 優先判斷 body class/id
+            if (bodyId === 'body-user' && document.body.classList.contains('dashboard')) {
+                document.body.setAttribute('data-app', 'dashboard');
+                console.log('🏠 Set data-app="dashboard" for background');
+            } else if (path.includes('/apps/files')) {
+                document.body.setAttribute('data-app', 'files');
+                console.log('📁 Set data-app="files" for background');
+            } else if (path.includes('/apps/photos')) {
+                document.body.setAttribute('data-app', 'photos');
+                console.log('📷 Set data-app="photos" for background');
+            } else if (path.includes('/settings')) {
+                document.body.setAttribute('data-app', 'settings');
+                console.log('⚙️ Set data-app="settings" for background');
+            } else if (path === '/' || path === '/index.php' || path.includes('/apps/dashboard')) {
+                // 預設首頁也算 Dashboard
+                document.body.setAttribute('data-app', 'dashboard');
+                console.log('🏠 Set data-app="dashboard" for background (homepage)');
+            }
+        }
+    };
+
+    setDataApp();
+})();
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🕵️ AutoArchiver v0.1.3 Loaded (with restore support, quota checking, and storage monitoring)');
 

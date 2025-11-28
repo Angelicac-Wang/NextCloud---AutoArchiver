@@ -63,7 +63,7 @@ docker compose logs -f
 
 首次啟動時，需要通過瀏覽器完成初始化：
 
-1. 打開瀏覽器，訪問：`http://localhost:8080`
+1. 打開瀏覽器，訪問：`http://localhost:8081`
 2. 創建管理員帳號（建議使用 `admin` / `admin`）
 3. 等待初始化完成
 

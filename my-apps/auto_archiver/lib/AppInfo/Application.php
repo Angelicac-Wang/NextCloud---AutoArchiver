@@ -28,8 +28,11 @@ class Application extends App implements IBootstrap {
     }
 
     public function boot(IBootContext $context): void {
-        
+
+        // 先載入 JS（用於設定 data-app 屬性）
         Util::addScript('auto_archiver', 'script');
+        // 再載入 CSS（在 theming CSS 之後載入，確保我們的 CSS 能覆蓋 theming 的背景設定）
+        Util::addStyle('auto_archiver', 'backgrounds', 'theming');
 
         // 註冊排程工作
         $jobList = $context->getServerContainer()->get(IJobList::class);
