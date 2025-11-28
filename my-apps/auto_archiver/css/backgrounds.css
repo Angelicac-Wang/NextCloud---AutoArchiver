@@ -4,8 +4,10 @@
 /* ==================== 全域 Header 樣式 ==================== */
 /* 預設紅色半透明背景 */
 #header {
-    background-color: rgba(220, 38, 38, 0.5) !important;
-    backdrop-filter: blur(10px);
+    /* background-color: rgba(220, 38, 38, 0.5) !important; */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px rgba(73, 63, 29, 0.3);
 }
 
 /* ==================== 預設背景（避免閃爍） ==================== */
@@ -60,7 +62,7 @@ body[data-app="dashboard"] .wrapper {
     background: transparent !important;
 }
 
-/* Dashboard 遮罩（讓文字更清楚） */
+/* Dashboard 遮罩（讓文字更清楚）
 body[data-app="dashboard"] #app-dashboard::before {
     content: '';
     position: fixed;
@@ -71,7 +73,7 @@ body[data-app="dashboard"] #app-dashboard::before {
     background: rgba(0, 0, 0, 0.2);
     pointer-events: none;
     z-index: 0;
-}
+} */
 
 body[data-app="dashboard"] #app-dashboard > * {
     position: relative;
@@ -89,8 +91,8 @@ body[data-app="files"] {
     --color-background-plain: transparent !important;
 
     /* 主要配色 */
-    --color-main-background: #FFF8E7 !important; /* 暖黃色宮牆背景 */
-    --color-main-background-blur: rgba(255, 248, 231, 0.7) !important; /* 側邊欄半透明背景 */
+    --color-main-background: transparent !important; /* 暖黃色宮牆背景 */
+    --color-main-background-blur: rgba(255, 248, 231, 0.5) !important; /* 側邊欄半透明背景 */
     --color-main-text: #3B1E06 !important; /* 深棕色墨色 */
     --color-primary: #D4AF37 !important; /* 皇家金色 */
     --color-primary-element: #D4AF37 !important;
@@ -131,10 +133,14 @@ body[data-app="files"] .wrapper {
     background: transparent !important;
 }
 
-/* 3. Header 朱紅色漸變背景（帝殿特色） */
+/* 3. Header 朱紅色漸變背景（帝殿特色） - 半透明毛玻璃效果 */
 body[data-app="files"] #header {
-    background: linear-gradient(135deg, #C8102E 0%, #A0082A 100%) !important;
-    box-shadow: 0 2px 8px rgba(200, 16, 46, 0.3);
+    /* background: linear-gradient(135deg,
+        rgba(200, 16, 46, 0.95) 0%,
+        rgba(160, 8, 42, 0.9) 100%) !important; */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
 
 /* 4. 主要按鈕金色漸變 */
@@ -207,7 +213,7 @@ body[data-app="files"] #app-navigation .icon {
 /* 6. 內容區域整體背景 - 包含工具列和檔案列表 */
 body[data-app="files"] #app-content,
 body[data-app="files"] #app-content-vue {
-    background-color: rgba(255, 248, 231, 0.9) !important;
+    background-color: rgba(255, 248, 231, 0.6) !important;
     backdrop-filter: blur(10px);
 }
 
@@ -219,9 +225,18 @@ body[data-app="files"] .files-list {
 /* 8. 上方工具列（所有檔案、新增等按鈕區域）- 稍微深一點 */
 body[data-app="files"] .files-controls,
 body[data-app="files"] #app-content-vue > header {
-    background-color: rgba(255, 248, 231, 0.95) !important;
+    background-color: rgba(255, 248, 231, 0.6) !important;
     border-bottom: 2px solid rgba(212, 175, 55, 0.4);
     padding: 10px;
+}
+
+body[data-app="files"] div.editor.editor-media-handler.text-editor__main {
+    background-color: transparent !important;
+}
+
+
+body[data-app="files"] div.files-list__filters {
+    background-color: transparent !important;
 }
 
 /* ==================== Photos 背景 ==================== */
