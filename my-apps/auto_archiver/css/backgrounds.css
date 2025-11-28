@@ -108,6 +108,13 @@ body[data-app="files"] {
     --color-border: #D4AF37 !important;
     --color-border-dark: #8B6914 !important;
     --color-border-maxcontrast: #C19B28 !important;
+
+    /* Hover 和互動狀態顏色 */
+    --color-background-hover: rgba(212, 175, 55, 0.3) !important; /* 金色半透明 hover */
+    --color-background-dark: rgba(212, 175, 55, 0.4) !important; /* 金色深色狀態 */
+    --color-primary-element-hover: rgba(212, 175, 55, 0.55) !important; /* Primary 元素 hover - 金色 */
+    --color-primary-element-light: rgba(212, 175, 55, 0.35) !important; /* 金色淺色元素 */
+    --color-primary-element-light-hover: rgba(212, 175, 55, 0.45) !important; 淺色元素 hover
 }
 
 /* 2. 直接覆蓋 body 和 html 的背景屬性（最高優先級） */
@@ -144,16 +151,22 @@ body[data-app="files"] #header {
 }
 
 /* 4. 主要按鈕金色漸變 */
-body[data-app="files"] .button,
+body[data-app="files"] .button.primary,
 body[data-app="files"] button.primary,
-body[data-app="files"] .primary-action {
+body[data-app="files"] .primary-action,
+body[data-app="files"] button[aria-label="新增"],
+body[data-app="files"] .button--vue-primary,
+body[data-app="files"] .action-item__menutoggle--primary {
     background: linear-gradient(135deg, #D4AF37 0%, #C19B28 100%) !important;
     color: #3B1E06 !important;
     border: 1px solid #8B6914 !important;
 }
 
-body[data-app="files"] .button:hover,
-body[data-app="files"] button.primary:hover {
+body[data-app="files"] .button.primary:hover,
+body[data-app="files"] button.primary:hover,
+body[data-app="files"] .primary-action:hover,
+body[data-app="files"] button[aria-label="新增"]:hover,
+body[data-app="files"] .button--vue-primary:hover {
     background: linear-gradient(135deg, #E5C048 0%, #D4AF37 100%) !important;
 }
 
@@ -230,13 +243,63 @@ body[data-app="files"] #app-content-vue > header {
     padding: 10px;
 }
 
-body[data-app="files"] div.editor.editor-media-handler.text-editor__main {
+body[data-app="files"] div.editor.editor-media-handler.text-editor__main, 
+body[data-app="files"] div.files-list__filters,
+body[data-app="files"] .text-menubar {
     background-color: transparent !important;
 }
 
+/* 9. 新增按鈕的文字顏色 */
+body[data-app="files"] .button-vue__text ,
+body[data-app="files"] .button-vue__icon ,
+body[data-app="files"] .nc-chip__text{
+    color: #3B1E06 !important;
+}
 
-body[data-app="files"] div.files-list__filters {
-    background-color: transparent !important;
+
+
+/* 12. Hover 效果統一 - 金色半透明 */
+/* 檔案列表行 hover */
+body[data-app="files"] .files-list tbody tr:hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 按鈕 hover（除了 primary 按鈕） */
+body[data-app="files"] button:not(.primary):hover,
+body[data-app="files"] .button:not(.primary):hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 連結和可點擊元素 hover */
+body[data-app="files"] a:hover:not(.primary),
+body[data-app="files"] .clickable:hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 下拉選單項目 hover */
+body[data-app="files"] .v-popper__inner ul li:hover,
+body[data-app="files"] .popovermenu li:hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 13. Pop-up 彈出選單不透明背景 */
+/* 確保 pop-up 選單有不透明的底色，避免看到下方內容 */
+body[data-app="files"] .v-popper__inner,
+body[data-app="files"] .popovermenu,
+body[data-app="files"] .bubble,
+body[data-app="files"] .app-navigation-entry-menu {
+    background-color: rgba(255, 248, 231, 0.98) !important; /* 暖黃色宮牆背景，幾乎不透明 */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(212, 175, 55, 0.3) !important; /* 金色邊框 */
+}
+
+/* Pop-up 選單內的項目文字顏色 */
+body[data-app="files"] .v-popper__inner ul li,
+body[data-app="files"] .popovermenu ul li,
+body[data-app="files"] .popovermenu ul li a,
+body[data-app="files"] .popovermenu ul li button {
+    color: #3B1E06 !important; /* 深棕色墨色 */
 }
 
 /* ==================== Photos 背景 ==================== */
