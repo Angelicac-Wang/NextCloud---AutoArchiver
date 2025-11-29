@@ -233,6 +233,10 @@ class StorageMonitorJob extends TimedJob {
            ->leftJoin('aa', 'filecache', 'fc', $qb->expr()->eq('aa.file_id', 'fc.fileid'))
            ->leftJoin('fc', 'storages', 'st', $qb->expr()->eq('fc.storage', 'st.numeric_id'))
            ->where($qb->expr()->isNotNull('fc.path'))
+           ->andWhere($qb->expr()->orX(
+               $qb->expr()->eq('aa.is_pinned', $qb->createNamedParameter(0)),
+               $qb->expr()->isNull('aa.is_pinned')
+           )) // 排除已釘選的檔案
            ->orderBy('aa.last_accessed', 'ASC') // 最久未使用的在前
            ->setMaxResults($limit);
         

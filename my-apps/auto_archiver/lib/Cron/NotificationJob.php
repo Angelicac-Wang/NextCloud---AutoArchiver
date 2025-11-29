@@ -69,7 +69,11 @@ class NotificationJob extends TimedJob {
             ->innerJoin('f', 'storages', 's', 'f.storage = s.numeric_id')
             ->where($qb->expr()->lte('a.last_accessed', $qb->createNamedParameter($notifyThreshold)))
             ->andWhere($qb->expr()->gt('a.last_accessed', $qb->createNamedParameter($archiveThreshold)))
-            ->andWhere($qb->expr()->like('s.id', $qb->createNamedParameter('home::%')));
+            ->andWhere($qb->expr()->like('s.id', $qb->createNamedParameter('home::%')))
+            ->andWhere($qb->expr()->orX(
+                $qb->expr()->eq('a.is_pinned', $qb->createNamedParameter(0)),
+                $qb->expr()->isNull('a.is_pinned')
+            )); // 排除已釘選的檔案
         
         $result = $qb->execute();
         $filesToNotify = $result->fetchAll();

@@ -31,22 +31,32 @@ class PingController extends Controller {
     }
 
     private function upsertAccessTime($fileId, $time) {
-        // 複製之前 Listener 寫過的那個 upsert 邏輯放這裡
-        // 為了簡潔，這裡只寫簡單版，建議把這段邏輯抽成 Service 比較乾淨
-        // 但直接寫在這裡也會動：
+        // Update existing record's last_accessed time
+        // This preserves is_pinned status if the record already exists
         $qb = $this->db->getQueryBuilder();
         $qb->update('auto_archiver_access')
            ->set('last_accessed', $qb->createNamedParameter($time))
            ->where($qb->expr()->eq('file_id', $qb->createNamedParameter($fileId)));
         $result = $qb->execute();
 
+        // If no record was updated, check if it exists and insert if needed
         if ($result === 0) {
-            // ... (插入邏輯，同之前的 code) ...
-             $qbInsert = $this->db->getQueryBuilder();
-             $qbInsert->insert('auto_archiver_access')
-                      ->setValue('file_id', $qbInsert->createNamedParameter($fileId))
-                      ->setValue('last_accessed', $qbInsert->createNamedParameter($time));
-             $qbInsert->execute();
+            $check = $this->db->getQueryBuilder();
+            $check->select('id', 'is_pinned')
+                  ->from('auto_archiver_access')
+                  ->where($check->expr()->eq('file_id', $check->createNamedParameter($fileId)));
+            $existing = $check->executeQuery()->fetch();
+            $check->closeCursor();
+
+            if (!$existing) {
+                // Insert new record with default is_pinned = 0
+                $qbInsert = $this->db->getQueryBuilder();
+                $qbInsert->insert('auto_archiver_access')
+                         ->setValue('file_id', $qbInsert->createNamedParameter($fileId))
+                         ->setValue('last_accessed', $qbInsert->createNamedParameter($time))
+                         ->setValue('is_pinned', $qbInsert->createNamedParameter(0));
+                $qbInsert->execute();
+            }
         }
     }
 }

@@ -41,7 +41,11 @@ class ArchiveOldFiles extends TimedJob {
            ->leftJoin('aa', 'filecache', 'fc', $qb->expr()->eq('aa.file_id', 'fc.fileid'))
            ->leftJoin('fc', 'storages', 'st', $qb->expr()->eq('fc.storage', 'st.numeric_id'))
            ->where($qb->expr()->lt('aa.last_accessed', $qb->createNamedParameter($threshold)))
-           ->andWhere($qb->expr()->isNotNull('fc.path')); // 只處理存在於 filecache 中的文件
+           ->andWhere($qb->expr()->isNotNull('fc.path')) // 只處理存在於 filecache 中的文件
+           ->andWhere($qb->expr()->orX(
+               $qb->expr()->eq('aa.is_pinned', $qb->createNamedParameter(0)),
+               $qb->expr()->isNull('aa.is_pinned')
+           )); // 排除已釘選的檔案
         
         $result = $qb->executeQuery();
         
@@ -94,7 +98,36 @@ class ArchiveOldFiles extends TimedJob {
 
         try {
             // 1. 嘗試抓取檔案節點 - 先嘗試 getById
+            // Note: getById may return multiple nodes if the same file exists in multiple storages
+            // We need to find the correct one based on the file path
             $nodes = $this->rootFolder->getById($fileId);
+            
+            // Filter nodes to find the one matching our file path
+            $matchingNode = null;
+            if (!empty($nodes) && $filePath) {
+                foreach ($nodes as $node) {
+                    $nodePath = $node->getPath();
+                    // Normalize paths for comparison (remove leading slash, handle different formats)
+                    $normalizedNodePath = ltrim($nodePath, '/');
+                    $normalizedFilePath = ltrim($filePath, '/');
+                    
+                    // Check if paths match (exact match or node path contains file path)
+                    if ($normalizedNodePath === $normalizedFilePath || 
+                        strpos($normalizedNodePath, $normalizedFilePath) !== false ||
+                        strpos($normalizedFilePath, $normalizedNodePath) !== false) {
+                        $matchingNode = $node;
+                        break;
+                    }
+                }
+                
+                // If we found a matching node, use it; otherwise use the first node
+                if ($matchingNode) {
+                    $nodes = [$matchingNode];
+                } else {
+                    // Use first node if no match found (fallback behavior)
+                    $nodes = [$nodes[0]];
+                }
+            }
             
             // 如果 getById 失敗，且我們有文件路徑，嘗試通過路徑查找
             if (empty($nodes) && $filePath) {
