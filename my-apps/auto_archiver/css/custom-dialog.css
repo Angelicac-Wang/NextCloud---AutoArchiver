@@ -1,0 +1,140 @@
+/* ==================== 自訂對話框樣式 ==================== */
+
+/* 註冊自訂字體 - 王汉宗特明体繁 */
+@font-face {
+    font-family: '王汉宗特明体繁';
+    src: url('../public/王汉宗特明体繁.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* 遮罩層 */
+.custom-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* 對話框容器 - 使用背景圖片 */
+.custom-dialog {
+    background-image: url('../public/dialog.png');
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 850px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;  /* 改成 flex-start，讓 margin 生效 */
+    padding: 15px 50px;
+    font-family: 'ChaoZiSheXiaoShiFan', 'Microsoft JhengHei', sans-serif;
+    animation: slideIn 0.3s ease;
+    position: relative;
+}
+
+@keyframes slideIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 標題 */
+.custom-dialog-title {
+    font-family: '王汉宗特明体繁';
+    font-size: 40px;
+    font-weight: 100;
+    color: rgba(206, 165, 104, 1);
+    text-align: center;
+    margin-bottom: 30px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* 內容 */
+.custom-dialog-content {
+    font-family: '王汉宗特明体繁';
+    flex: 1;
+    font-size: 32px;
+    line-height: 1;
+    color: #4A3728;
+    text-align: left;
+    white-space: pre-line;
+    text-shadow: 0.5px 0.5px 1px rgba(255, 255, 255, 0.6);
+    padding: 20px 0;
+}
+
+/* 按鈕列 */
+.custom-dialog-actions {
+    display: flex;
+    gap: 180px;              /* 按鈕之間分開更多（原本 20px） */
+    justify-content: center;
+    position: relative;
+    top: -26px;              /* 往上移 30px */
+}
+
+/* 按鈕通用樣式 */
+.custom-dialog-btn {
+    font-family: '王汉宗特明体繁', 'Microsoft JhengHei', sans-serif !important;
+    font-size: 32px !important;
+    font-weight: normal !important;
+    color: rgba(239, 202, 148, 1) !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 8px;
+    padding: 12px 32px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* 主要按鈕（傳召回宮） */
+.custom-dialog-btn-primary {
+    position: relative;
+    left: 8px;  /* 只有這個按鈕往右移 10px */
+}
+
+/* .custom-dialog-btn-primary:hover {
+    opacity: 0.8;
+    transform: translateY(-2px);
+} */
+
+.custom-dialog-btn-primary:active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* 次要按鈕（朕再想想） */
+.custom-dialog-btn-secondary {
+    /* 無額外樣式，使用通用樣式 */
+}
+
+/* .custom-dialog-btn-secondary:hover {
+    opacity: 0.8;
+} */
+
+.custom-dialog-btn-secondary:active {
+    transform: translateY(0);
+    opacity: 1;
+}

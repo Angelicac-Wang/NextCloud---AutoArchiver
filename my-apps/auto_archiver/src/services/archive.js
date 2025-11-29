@@ -6,10 +6,10 @@ import { davGetClient, davGetDefaultPropfind, davResultToNode, davRootPath } fro
 export const getContents = async (path = '/') => {
 	const davClient = davGetClient()
 
-	// 冷宮區永遠只顯示 /archive 資料夾的內容
-	// 如果 path 是 '/'，顯示 /archive 根目錄
-	// 如果 path 是子路徑，顯示 /archive 下的子路徑
-	const targetPath = path === '/' ? '/archive' : `/archive${path}`
+	// 冷宮區永遠只顯示 /Archive 資料夾的內容（封存檔案存放處）
+	// 如果 path 是 '/'，顯示 /Archive 根目錄
+	// 如果 path 是子路徑，顯示 /Archive 下的子路徑
+	const targetPath = path === '/' ? '/Archive' : `/Archive${path}`
 	const archivePath = `${davRootPath}${targetPath}`
 
 	console.log('🔍 Cold Palace - fetching path:', targetPath)

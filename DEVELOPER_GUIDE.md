@@ -194,6 +194,9 @@ docker compose exec app php occ app:enable auto_archiver
 
 3. **手動觸發封存任務**
    ```bash
+   # 先找到 job id
+   docker compose exec --user www-data app php occ background-job:list | grep ArchiveOldFiles
+
    # 方法一：使用 background-job:execute
    docker compose exec app php occ background-job:execute OCA\\AutoArchiver\\Cron\\ArchiveOldFiles
    

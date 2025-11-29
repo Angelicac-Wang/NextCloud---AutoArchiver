@@ -108,14 +108,79 @@ document.addEventListener('DOMContentLoaded', function() {
             event.stopPropagation();
             
             console.log(`📦 Placeholder file detected: ${fileName}, ID: ${fileId}`);
-            
-            // 顯示確認對話框
+
+            // 顯示自訂對話框（宮廷風格）
             const originalName = fileName.replace('.ncarchive', '');
-            const message = `此檔案已被封存以節省儲存空間。\n\n原始檔案名稱: ${originalName}\n\n是否要恢復此檔案？恢復後檔案會自動解壓縮並回到原位置。`;
-            
-            if (confirm(message)) {
-                // 顯示載入提示
-                const loadingMsg = OC.Notification.showTemporary('正在恢復檔案...', { timeout: 0 });
+            const message = `愛妃 ${originalName} 昔日被打入冷宮，如今久未蒙召。
+
+皇上是否要召回此愛妃？
+
+召回後她將解開枷鎖，重返後宮侍寢。`;
+
+            // 建立自訂對話框
+            const showCustomDialog = (message, onConfirm, onCancel) => {
+                // 建立遮罩層
+                const overlay = document.createElement('div');
+                overlay.className = 'custom-dialog-overlay';
+
+                // 建立對話框
+                const dialog = document.createElement('div');
+                dialog.className = 'custom-dialog';
+
+                // 建立標題
+                const title = document.createElement('div');
+                title.className = 'custom-dialog-title';
+                title.textContent = '皇上，冷宮捎來消息';
+
+                // 建立內容
+                const content = document.createElement('div');
+                content.className = 'custom-dialog-content';
+                content.textContent = message;
+
+                // 建立按鈕列
+                const actions = document.createElement('div');
+                actions.className = 'custom-dialog-actions';
+
+                // 建立「朕再想想」按鈕
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'custom-dialog-btn custom-dialog-btn-secondary';
+                cancelBtn.textContent = '朕再想想';
+                cancelBtn.onclick = () => {
+                    overlay.remove();
+                    if (onCancel) onCancel();
+                };
+
+                // 建立「傳召回宮」按鈕
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = 'custom-dialog-btn custom-dialog-btn-primary';
+                confirmBtn.textContent = '傳召回宮';
+                confirmBtn.onclick = () => {
+                    overlay.remove();
+                    if (onConfirm) onConfirm();
+                };
+
+                // 組裝對話框
+                actions.appendChild(cancelBtn);
+                actions.appendChild(confirmBtn);
+                dialog.appendChild(title);
+                dialog.appendChild(content);
+                dialog.appendChild(actions);
+                overlay.appendChild(dialog);
+
+                // 添加到 body
+                document.body.appendChild(overlay);
+
+                console.log('✅ Custom dialog created');
+            };
+
+            // 顯示對話框
+            showCustomDialog(
+                message,
+                function() {
+                    // 確認回調
+
+                    // 顯示載入提示
+                    const loadingMsg = OC.Notification.showTemporary('正在召回愛妃...', { timeout: 0 });
                 
                 // 調用恢復 API
                 let url = OC.generateUrl('/apps/auto_archiver/restore/{fileId}', { fileId: fileId });
@@ -129,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     OC.Notification.hide(loadingMsg);
                     
                     if (data.success) {
-                        OC.Notification.showTemporary('檔案恢復成功！正在刷新...', { type: 'success', timeout: 2000 });
+                        OC.Notification.showTemporary('愛妃已召回，重返後宮！', { type: 'success', timeout: 2000 });
                         // 快速刷新頁面（強制從服務器重新加載，跳過緩存）
                         // 使用最短延遲，確保服務器端操作完成即可
                         setTimeout(() => {
@@ -169,8 +234,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     OC.Notification.showTemporary('恢復失敗: ' + error.message, { type: 'error' });
                     console.error('Restore error:', error);
                 });
-            }
-            
+                },
+                null  // 取消回調
+            );
+
             return;
         }
         
