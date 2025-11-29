@@ -6,7 +6,9 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\Files\Events\Node\BeforeNodeReadEvent;
+use OCP\Files\Events\Node\NodeCreatedEvent;
 use OCA\AutoArchiver\Listener\FileReadListener;
+use OCA\AutoArchiver\Listener\FileCreatedListener;
 use OCP\BackgroundJob\IJobList;
 use OCA\AutoArchiver\Cron\ArchiveOldFiles;
 use OCA\AutoArchiver\Cron\StorageMonitorJob;
@@ -22,10 +24,17 @@ class Application extends App implements IBootstrap {
     }
 
     public function register(IRegistrationContext $context): void {
-        // 註冊 Event Listener
+        // 註冊 Event Listener for file reads
         $context->registerEventListener(
             BeforeNodeReadEvent::class,
             FileReadListener::class
+        );
+        
+        // 註冊 Event Listener for file creation/upload
+        // This ensures all uploaded files are tracked, even if not accessed
+        $context->registerEventListener(
+            NodeCreatedEvent::class,
+            FileCreatedListener::class
         );
         
         // 註冊通知解析器

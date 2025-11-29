@@ -4,7 +4,7 @@
     <name>Auto Archiver</name>
     <summary>Move old files to archive automatically</summary>
     <description>Automatically compresses and moves old files to archive folder, leaving a placeholder for easy restoration.</description>
-    <version>0.1.9</version>
+    <version>0.2.0</version>
     <licence>agpl</licence>
     <author>Angelica</author>
     <namespace>AutoArchiver</namespace>

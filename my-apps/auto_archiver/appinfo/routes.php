@@ -31,5 +31,20 @@ return [
             'url' => '/statistics',
             'verb' => 'GET',
         ],
+        [
+            'name' => 'Pin#pin',
+            'url' => '/pin',
+            'verb' => 'POST',
+        ],
+        [
+            'name' => 'Pin#unpin',
+            'url' => '/pin',
+            'verb' => 'DELETE',
+        ],
+        [
+            'name' => 'Pin#getStatus',
+            'url' => '/pin/{fileId}/status',
+            'verb' => 'GET',
+        ],
     ],
 ];

@@ -67,25 +67,30 @@ class FileReadListener implements IEventListener {
     }
 
     private function upsertAccessTime($fileId, $time) {
-        // (這部分資料庫邏輯不用變，維持原樣)
+        // Update existing record's last_accessed time
+        // This preserves is_pinned status if the record already exists
         $qb = $this->db->getQueryBuilder();
         $qb->update('auto_archiver_access')
            ->set('last_accessed', $qb->createNamedParameter($time))
            ->where($qb->expr()->eq('file_id', $qb->createNamedParameter($fileId)));
         $result = $qb->execute();
 
+        // If no record was updated, check if it exists and insert if needed
         if ($result === 0) {
             $check = $this->db->getQueryBuilder();
-            $check->select('id')
+            $check->select('id', 'is_pinned')
                   ->from('auto_archiver_access')
                   ->where($check->expr()->eq('file_id', $check->createNamedParameter($fileId)));
-            $exists = $check->executeQuery()->fetch();
+            $existing = $check->executeQuery()->fetch();
+            $check->closeCursor();
 
-            if (!$exists) {
+            if (!$existing) {
+                // Insert new record with default is_pinned = 0
                 $qbInsert = $this->db->getQueryBuilder();
                 $qbInsert->insert('auto_archiver_access')
                          ->setValue('file_id', $qbInsert->createNamedParameter($fileId))
-                         ->setValue('last_accessed', $qbInsert->createNamedParameter($time));
+                         ->setValue('last_accessed', $qbInsert->createNamedParameter($time))
+                         ->setValue('is_pinned', $qbInsert->createNamedParameter(0));
                 $qbInsert->execute();
             }
         }
