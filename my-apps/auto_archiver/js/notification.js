@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		const notificationText = notification.textContent || '';
 		
 		// 判斷是否為我們的通知
-		if (app !== 'auto_archiver' && !notificationText.includes('will be archived')) {
+		if (app !== 'auto_archiver' && !notificationText.includes('will be archived') && !notificationText.includes('儲存空間使用量')) {
 			return;
 		}
 		
@@ -41,8 +41,12 @@ document.addEventListener('DOMContentLoaded', function() {
 		const objectType = notification.getAttribute('data-object-type');
 		console.log('[AutoArchiver] Object Type:', objectType);
 		
-		// 通知沒有直接包含 fileId (object_id)，需要透過 API 查詢
-		if (notificationId) {
+		// 判斷是否為儲存空間警告通知
+		if (objectType === 'storage' || notificationText.includes('儲存空間使用量')) {
+			// 儲存空間通知不需要 fileId，直接添加按鈕
+			addStorageWarningButtons(notification);
+		} else if (notificationId) {
+			// 檔案通知需要透過 API 查詢 fileId
 			fetchFileIdFromNotification(notificationId, notification);
 		} else {
 			console.error('[AutoArchiver] No notification ID found');
@@ -61,12 +65,26 @@ document.addEventListener('DOMContentLoaded', function() {
 		.then(res => res.json())
 		.then(data => {
 			console.log('[AutoArchiver] Notification details:', data);
-			if (data.ocs && data.ocs.data && data.ocs.data.object_id) {
-				const fileId = data.ocs.data.object_id;
-				console.log('[AutoArchiver] Got fileId from API:', fileId);
-				addButtonsToNotification(notification, fileId);
+			if (data.ocs && data.ocs.data) {
+				const notifData = data.ocs.data;
+				const objectType = notifData.object_type;
+				const objectId = notifData.object_id;
+				
+				console.log('[AutoArchiver] Object Type from API:', objectType);
+				console.log('[AutoArchiver] Object ID from API:', objectId);
+				
+				// 判斷是儲存空間通知還是檔案通知
+				if (objectType === 'storage') {
+					// 儲存空間警告通知
+					console.log('[AutoArchiver] Storage warning notification detected');
+					addStorageWarningButtons(notification);
+				} else {
+					// 檔案通知
+					console.log('[AutoArchiver] File notification detected, fileId:', objectId);
+					addButtonsToNotification(notification, objectId);
+				}
 			} else {
-				console.error('[AutoArchiver] Failed to get fileId from API');
+				console.error('[AutoArchiver] Failed to get notification data from API');
 			}
 		})
 		.catch(error => {
@@ -229,5 +247,102 @@ document.addEventListener('DOMContentLoaded', function() {
 		} else {
 			notification.remove();
 		}
+	}
+	
+	// 為儲存空間警告通知添加按鈕
+	function addStorageWarningButtons(notification) {
+		// 找到通知的內容區域
+		const messageElement = notification.querySelector('.notification__message') || 
+		                       notification.querySelector('.toast__message') ||
+		                       notification.querySelector('.notification__content') ||
+		                       notification.querySelector('.toast__content') ||
+		                       notification.querySelector('.notification-content') ||
+		                       notification.querySelector('.toast-content') ||
+		                       notification;
+		
+		console.log('[AutoArchiver] Adding storage warning buttons');
+		
+		// 創建按鈕容器
+		const buttonContainer = document.createElement('div');
+		buttonContainer.className = 'auto-archiver-buttons';
+		buttonContainer.style.cssText = 'margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;';
+		
+		// 創建「不要封存」按鈕
+		const skipButton = document.createElement('button');
+		skipButton.textContent = '不要封存';
+		skipButton.style.cssText = 'padding: 6px 14px; background-color: #0082c9; color: #333; border: none; border-radius: 3px; cursor: pointer; font-size: 13px;';
+		
+		skipButton.onclick = function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			handleSkipStorageArchive(notification);
+		};
+		
+		// 創建「忽略」按鈕
+		const dismissButton = document.createElement('button');
+		dismissButton.textContent = '忽略';
+		dismissButton.style.cssText = 'padding: 6px 14px; background-color: #f0f0f0; color: #333; border: none; border-radius: 3px; cursor: pointer; font-size: 13px;';
+		
+		dismissButton.onclick = function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			handleDismissStorageWarning(notification);
+		};
+		
+		buttonContainer.appendChild(skipButton);
+		buttonContainer.appendChild(dismissButton);
+		messageElement.appendChild(buttonContainer);
+		console.log('[AutoArchiver] Storage warning buttons added successfully');
+	}
+	
+	// 處理「不要封存」按鈕點擊
+	function handleSkipStorageArchive(notification) {
+		console.log('[AutoArchiver] Skipping storage archive');
+		const buttons = notification.querySelectorAll('.auto-archiver-buttons button');
+		buttons.forEach(btn => btn.disabled = true);
+		
+		const url = OC.generateUrl('/apps/auto_archiver/skip-storage-archive');
+		console.log('[AutoArchiver] API URL:', url);
+		
+		fetch(url, {
+			method: 'POST',
+			headers: {
+				'requesttoken': OC.requestToken,
+				'Content-Type': 'application/json'
+			}
+		})
+		.then(response => {
+			console.log('[AutoArchiver] Response status:', response.status);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			return response.json();
+		})
+		.then(data => {
+			console.log('[AutoArchiver] Skip archive response:', data);
+			if (data.success) {
+				OC.Notification.showTemporary('已選擇不封存檔案');
+				removeNotification(notification);
+			} else {
+				OC.Notification.showTemporary('操作失敗: ' + (data.message || '未知錯誤'));
+				buttons.forEach(btn => btn.disabled = false);
+			}
+		})
+		.catch(error => {
+			console.error('[AutoArchiver] Skip archive error:', error);
+			OC.Notification.showTemporary('操作失敗：' + error.message);
+			buttons.forEach(btn => btn.disabled = false);
+		});
+	}
+	
+	// 處理「忽略」按鈕點擊（儲存空間警告）
+	function handleDismissStorageWarning(notification) {
+		console.log('[AutoArchiver] Dismissing storage warning');
+		const buttons = notification.querySelectorAll('.auto-archiver-buttons button');
+		buttons.forEach(btn => btn.disabled = true);
+		
+		// 直接刪除通知（不調用 API）
+		OC.Notification.showTemporary('已忽略通知');
+		removeNotification(notification);
 	}
 });

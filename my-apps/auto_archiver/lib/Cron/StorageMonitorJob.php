@@ -8,6 +8,7 @@ use OCP\IDBConnection;
 use OCP\Files\IRootFolder;
 use OCP\IUserManager;
 use OCP\IUser;
+use OCP\Notification\IManager as INotificationManager;
 use Psr\Log\LoggerInterface;
 
 class StorageMonitorJob extends TimedJob {
@@ -15,13 +16,21 @@ class StorageMonitorJob extends TimedJob {
     protected $db;
     protected $rootFolder;
     protected $userManager;
+    protected $notificationManager;
     protected $logger;
     
     // 存储空间使用率阈值（80%）
     // 测试时临时改为 50%，便于测试
     private const STORAGE_THRESHOLD = 0.80; // 临时测试值：50%
 
-    public function __construct(ITimeFactory $time, IDBConnection $db, IRootFolder $rootFolder, IUserManager $userManager, LoggerInterface $logger) {
+    public function __construct(
+        ITimeFactory $time,
+        IDBConnection $db,
+        IRootFolder $rootFolder,
+        IUserManager $userManager,
+        INotificationManager $notificationManager,
+        LoggerInterface $logger
+    ) {
         parent::__construct($time);
         
         // 設定為每小時執行一次（可以根據需要調整）
@@ -30,6 +39,7 @@ class StorageMonitorJob extends TimedJob {
         $this->db = $db;
         $this->rootFolder = $rootFolder;
         $this->userManager = $userManager;
+        $this->notificationManager = $notificationManager;
         $this->logger = $logger;
     }
 
@@ -52,6 +62,9 @@ class StorageMonitorJob extends TimedJob {
                 $thresholdPercent = self::STORAGE_THRESHOLD * 100;
                 $this->logger->warning("⚠️ [StorageMonitor] User '{$user->getUID()}' storage usage: {$usageInfo['usagePercent']}% (Threshold: {$thresholdPercent}%)");
                 $this->logger->warning("   Used: {$usageInfo['usedFormatted']} / {$usageInfo['quotaFormatted']}");
+                
+                // 發送儲存空間警告通知（24小時內只發送一次）
+                $this->sendStorageWarningNotification($user, $usageInfo);
                 
                 // 開始封存最久未使用的檔案
                 $archivedCount = $this->archiveUntilBelowThreshold($user, $usageInfo);
@@ -607,6 +620,99 @@ class StorageMonitorJob extends TimedJob {
         }
         
         return PHP_INT_MAX;
+    }
+    
+    /**
+     * 發送儲存空間警告通知
+     */
+    private function sendStorageWarningNotification(IUser $user, array $usageInfo): void {
+        $userId = $user->getUID();
+        
+        // 檢查是否在 24 小時內已發送過通知
+        if ($this->hasRecentStorageNotification($userId)) {
+            $this->logger->info('[StorageMonitor] Storage warning notification already sent in last 24 hours for user: ' . $userId);
+            return;
+        }
+        
+        $usagePercent = round($usageInfo['usagePercent'], 1);
+        $usedFormatted = $usageInfo['usedFormatted'];
+        $quotaFormatted = $usageInfo['quotaFormatted'];
+        
+        $this->logger->info('[StorageMonitor] Sending storage warning notification', [
+            'user_id' => $userId,
+            'usage_percent' => $usagePercent,
+            'used' => $usedFormatted,
+            'quota' => $quotaFormatted
+        ]);
+        
+        try {
+            // 創建通知
+            $notification = $this->notificationManager->createNotification();
+            $notification->setApp('auto_archiver')
+                ->setUser($userId)
+                ->setDateTime(new \DateTime())
+                ->setObject('storage', $userId) // 使用 'storage' 作為 object_type，userId 作為 object_id
+                ->setSubject('storage_warning', [
+                    'usage_percent' => $usagePercent,
+                    'used' => $usedFormatted,
+                    'quota' => $quotaFormatted
+                ])
+                ->setMessage('storage_warning_message', [
+                    'usage_percent' => $usagePercent,
+                    'used' => $usedFormatted,
+                    'quota' => $quotaFormatted
+                ]);
+            
+            $this->notificationManager->notify($notification);
+            
+            // 記錄通知已發送
+            $this->recordStorageNotificationSent($userId);
+            
+            $this->logger->info('[StorageMonitor] Storage warning notification sent successfully', [
+                'user_id' => $userId
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('[StorageMonitor] Failed to send storage warning notification', [
+                'user_id' => $userId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * 檢查是否在 24 小時內已發送過儲存空間通知
+     */
+    private function hasRecentStorageNotification(string $userId): bool {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('id')
+            ->from('archiver_decisions')
+            ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+            ->andWhere($qb->expr()->eq('decision', $qb->createNamedParameter('storage_warning_pending')))
+            ->andWhere($qb->expr()->gt('notified_at', $qb->createNamedParameter(time() - 86400))) // 24小時內
+            ->setMaxResults(1);
+        
+        $result = $qb->executeQuery();
+        $hasNotification = $result->fetch() !== false;
+        $result->closeCursor();
+        
+        return $hasNotification;
+    }
+    
+    /**
+     * 記錄儲存空間通知已發送
+     */
+    private function recordStorageNotificationSent(string $userId): void {
+        $qb = $this->db->getQueryBuilder();
+        $qb->insert('archiver_decisions')
+            ->values([
+                'file_id' => $qb->createNamedParameter(0), // 儲存空間通知沒有 file_id，使用 0
+                'user_id' => $qb->createNamedParameter($userId),
+                'decision' => $qb->createNamedParameter('storage_warning_pending'),
+                'notified_at' => $qb->createNamedParameter(time()),
+                'decided_at' => $qb->createNamedParameter(0),
+                'file_path' => $qb->createNamedParameter('storage_warning'),
+            ]);
+        $qb->executeStatement();
     }
 }
 

@@ -139,7 +139,7 @@ body[data-app="files"] {
     --color-background-dark: rgba(212, 175, 55, 0.4) !important; /* 金色深色狀態 */
     --color-primary-element-hover: rgba(212, 175, 55, 0.55) !important; /* Primary 元素 hover - 金色 */
     --color-primary-element-light: rgba(212, 175, 55, 0.35) !important; /* 金色淺色元素 */
-    --color-primary-element-light-hover: rgba(212, 175, 55, 0.45) !important; 淺色元素 hover
+    --color-primary-element-light-hover: rgba(212, 175, 55, 0.45) !important; /* 淺色元素 hover */
 }
 
 /* 2. 直接覆蓋 body 和 html 的背景屬性（最高優先級） */

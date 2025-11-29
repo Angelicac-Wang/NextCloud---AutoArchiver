@@ -50,6 +50,24 @@ class Notifier implements INotifier {
                 // 按钮将由前端 JavaScript 动态添加
                 return $notification;
                 
+            case 'storage_warning':
+                $parameters = $notification->getSubjectParameters();
+                $usagePercent = $parameters['usage_percent'] ?? 80;
+                $used = $parameters['used'] ?? 'unknown';
+                $quota = $parameters['quota'] ?? 'unknown';
+                
+                // 設置儲存空間警告通知
+                $notification->setParsedSubject(
+                    sprintf('儲存空間使用量已達 %.1f%%', $usagePercent)
+                );
+                
+                $notification->setParsedMessage(
+                    sprintf('您的儲存空間使用量已達 %.1f%%，系統將自動封存最久未使用的檔案以釋放空間。已使用：%s / %s', $usagePercent, $used, $quota)
+                );
+                
+                // 按钮将由前端 JavaScript 动态添加
+                return $notification;
+                
             default:
                 throw new UnknownNotificationException();
         }

@@ -51,5 +51,10 @@ return [
             'url' => '/pin/{fileId}/status',
             'verb' => 'GET',
         ],
+        [
+            'name' => 'Notification#skipStorageArchive',
+            'url' => '/skip-storage-archive',
+            'verb' => 'POST',
+        ],
     ],
 ];

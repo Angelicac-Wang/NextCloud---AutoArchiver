@@ -17,6 +17,7 @@
    - [測試 3：儲存空間監控](#測試-3儲存空間監控)
    - [測試 4：通知系統與「留宿宮中」功能](#測試-4通知系統與留宿宮中功能)
    - [測試 5：資料夾過濾](#測試-5資料夾過濾)
+   - [測試 6：儲存空間警告通知](#測試-6儲存空間警告通知)
 4. [💡 功能詳解](#-功能詳解)
 5. [🔍 調試與排查](#-調試與排查)
 6. [📚 快速參考手冊](#-快速參考手冊)
@@ -954,6 +955,314 @@ docker compose exec app php occ files:scan admin
 - ✅ 資料夾內的檔案可以正常被封存
 - ✅ 資料夾結構保持完整
 - ✅ 日誌中有「跳過資料夾」的記錄
+
+---
+
+### 測試 6：儲存空間警告通知
+
+#### 🎯 測試目標
+
+驗證系統能在儲存空間使用率超過 80% 時發送警告通知，並允許使用者選擇是否封存檔案以釋放空間。
+
+#### 📋 前置準備
+
+**步驟 1.1：清除舊的測試資料（重要！）**
+
+```bash
+# 清除所有儲存空間警告通知和決策記錄
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "DELETE FROM oc_notifications WHERE app = 'auto_archiver' AND object_type = 'storage'; DELETE FROM oc_archiver_decisions WHERE file_path = 'storage_warning';"
+
+# 驗證清除成功
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "SELECT COUNT(*) FROM oc_notifications WHERE app = 'auto_archiver' AND object_type = 'storage';"
+# 應該顯示：0
+```
+
+**步驟 1.2：檢查當前儲存使用率**
+
+```bash
+docker compose exec app php occ user:info admin
+
+# 輸出示例：
+# user_id: admin
+# display_name: admin
+# ...
+# quota: 10 MB
+# used: 2 MB (20%)  ← 當前使用率
+```
+
+**步驟 1.3：降低配額以便觸發閾值**
+
+```bash
+# 將配額設為 10MB（方便測試）
+docker compose exec app php occ user:setting admin files quota "10 MB"
+
+# 驗證配額已更改
+docker compose exec app php occ user:info admin | grep -i quota
+# 應該顯示：quota: 10 MB
+```
+
+**步驟 1.4：上傳大檔案使使用率超過 80%**
+
+```bash
+# 創建 9MB 的測試檔案（90% 使用率，超過 80% 閾值）
+docker compose exec app bash -c "dd if=/dev/zero of=/var/www/html/data/admin/files/large_file_1.bin bs=1M count=3"
+docker compose exec app bash -c "dd if=/dev/zero of=/var/www/html/data/admin/files/large_file_2.bin bs=1M count=3"
+docker compose exec app bash -c "dd if=/dev/zero of=/var/www/html/data/admin/files/large_file_3.bin bs=1M count=3"
+
+# 掃描檔案
+docker compose exec app php occ files:scan admin
+
+# 驗證使用率
+docker compose exec app php occ user:info admin | grep -i used
+# 應該顯示：used: 9 MB (90%)  ← 超過 80% 閾值
+```
+
+**步驟 1.5：模擬這些檔案為舊檔案（可選，用於測試自動封存）**
+
+```bash
+# 獲取所有 .bin 檔案的 file_id
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "SELECT fileid, path FROM oc_filecache WHERE path LIKE '%.bin%';"
+
+# 將所有 .bin 檔案的最後訪問時間設為 31 天前（可被封存）
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "UPDATE oc_auto_archiver_access SET last_accessed = UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 31 DAY)) WHERE file_id IN (SELECT fileid FROM oc_filecache WHERE path LIKE '%.bin%');"
+```
+
+#### ▶️ 執行測試
+
+**步驟 2.1：找到儲存監控任務的 Job ID**
+
+```bash
+docker compose exec app php occ background-job:list | grep StorageMonitor
+
+# 輸出示例：
+#   - OCA\AutoArchiver\Cron\StorageMonitorJob (ID: 118, last run: ...)
+
+# 記下 Job ID（假設是 118）
+```
+
+**步驟 2.2：執行儲存監控任務**
+
+```bash
+docker compose exec app php occ background-job:execute 118 --force-execute
+```
+
+#### ✅ 驗證結果（後端）
+
+**步驟 3.1：查看監控日誌**
+
+```bash
+docker compose exec app bash -c "tail -n 200 data/nextcloud.log | grep -i 'storagemonitor\|storage.*warning'"
+
+# 應該看到：
+# [StorageMonitor] User 'admin' storage usage: 90% (Threshold: 80%)
+# [StorageMonitor] Sending storage warning notification
+# [StorageMonitor] Storage warning notification sent successfully
+```
+
+**步驟 3.2：檢查通知是否寫入資料庫**
+
+```bash
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "SELECT notification_id, user, object_type, object_id, subject, subject_parameters FROM oc_notifications WHERE app = 'auto_archiver' AND object_type = 'storage' ORDER BY notification_id DESC LIMIT 1;"
+
+# 輸出示例：
+# +------------------+-------+-------------+-----------+----------------+------------------------------------------------+
+# | notification_id   | user  | object_type | object_id | subject        | subject_parameters                             |
+# +------------------+-------+-------------+-----------+----------------+------------------------------------------------+
+# |               45 | admin | storage     | admin     | storage_warning| {"usage_percent":90,"used":"9 MB","quota":"10 MB"} |
+# +------------------+-------+-------------+-----------+----------------+------------------------------------------------+
+```
+
+**步驟 3.3：檢查決策記錄是否創建**
+
+```bash
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "SELECT file_id, user_id, decision, FROM_UNIXTIME(notified_at) as notified_at, file_path FROM oc_archiver_decisions WHERE file_path = 'storage_warning' AND user_id = 'admin';"
+
+# 輸出示例：
+# +---------+---------+--------------------------+---------------------+----------------+
+# | file_id | user_id | decision                 | notified_at         | file_path      |
+# +---------+---------+--------------------------+---------------------+----------------+
+# |       0 | admin   | storage_warning_pending  | 2024-11-28 10:00:00 | storage_warning|
+# +---------+---------+--------------------------+---------------------+----------------+
+```
+
+✅ **後端驗證完成！** 通知已成功發送並寫入資料庫。
+
+#### ✅ 驗證結果（前端 UI）
+
+**步驟 4.1：清除瀏覽器緩存（重要！）**
+
+```
+1. 按 Ctrl+Shift+Delete（Windows/Linux）或 Cmd+Shift+Delete（Mac）
+2. 選擇「圖片和檔案」或「緩存」
+3. 時間範圍選擇「所有時間」
+4. 點擊「清除資料」
+5. **關閉瀏覽器並重新打開**
+```
+
+**步驟 4.2：打開開發者工具**
+
+```
+1. 打開 http://localhost:8080
+2. 按 F12 打開開發者工具
+3. 切換到 Console 標籤
+4. 按 Ctrl+Shift+R 強制刷新頁面
+```
+
+**步驟 4.3：查看通知**
+
+```
+1. 點擊右上角的鈴鐺圖標（通知）
+2. 應該看到通知：
+   「儲存空間使用量：90% (9 MB / 10 MB)」
+   「您的儲存空間使用量已超過 80%，系統將自動封存舊檔案以釋放空間。」
+
+3. 通知下方應該有兩個按鈕：
+   - 🔵 [不要封存]（藍色按鈕）
+   - ⚪ [忽略]（灰色按鈕）
+```
+
+**步驟 4.4：檢查 Console 日誌**
+
+```javascript
+// Console 應該顯示：
+[AutoArchiver] Notification handler loaded
+[AutoArchiver] Auto Archiver notification detected: notification
+[AutoArchiver] Object Type: storage
+[AutoArchiver] Storage warning notification detected
+[AutoArchiver] Adding storage warning buttons
+[AutoArchiver] Storage warning buttons added successfully
+```
+
+✅ **前端驗證完成！** 通知和按鈕已正確顯示。
+
+#### ▶️ 測試「不要封存」功能
+
+**步驟 5.1：點擊「不要封存」按鈕**
+
+```
+1. 在通知中點擊「不要封存」按鈕
+2. 按鈕應該變為 disabled 狀態（防止重複點擊）
+3. 應該彈出成功訊息：「已選擇不封存檔案」
+4. 通知應該從通知列表中消失
+```
+
+**步驟 5.2：檢查 Console 日誌**
+
+```javascript
+// Console 應該顯示：
+[AutoArchiver] Skipping storage archive
+[AutoArchiver] API URL: /apps/auto_archiver/skip-storage-archive
+[AutoArchiver] Response status: 200
+[AutoArchiver] Skip archive response: {success: true, message: "已選擇不封存檔案"}
+[AutoArchiver] Notification removed
+```
+
+**步驟 5.3：驗證決策記錄是否更新**
+
+```bash
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "SELECT file_id, user_id, decision, FROM_UNIXTIME(decided_at) as decided_at FROM oc_archiver_decisions WHERE file_path = 'storage_warning' AND user_id = 'admin';"
+
+# 輸出示例：
+# +---------+---------+--------------+---------------------+
+# | file_id | user_id | decision     | decided_at          |
+# +---------+---------+--------------+---------------------+
+# |       0 | admin   | skip_archive | 2024-11-28 15:30:45 |  ← decision 已更新！
+# +---------+---------+--------------+---------------------+
+```
+
+**步驟 5.4：驗證檔案未被封存**
+
+```bash
+# 檢查 Archive 資料夾是否為空（如果選擇不封存，檔案應該保持原樣）
+docker compose exec app ls -lh /var/www/html/data/admin/files/Archive/ 2>/dev/null || echo "Archive folder does not exist or is empty"
+
+# 檢查原始檔案是否仍然存在
+docker compose exec app ls -lh /var/www/html/data/admin/files/*.bin
+
+# 應該看到：
+# large_file_1.bin
+# large_file_2.bin
+# large_file_3.bin
+```
+
+✅ **「不要封存」功能驗證完成！** 使用者選擇不封存後，檔案保持原樣。
+
+#### ▶️ 測試「忽略」功能（可選）
+
+**步驟 6.1：重新生成通知（用於測試忽略功能）**
+
+```bash
+# 清除舊的決策記錄（允許重新發送通知）
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "DELETE FROM oc_archiver_decisions WHERE file_path = 'storage_warning' AND user_id = 'admin'; DELETE FROM oc_notifications WHERE app = 'auto_archiver' AND object_type = 'storage' AND user = 'admin';"
+
+# 重新執行儲存監控任務
+docker compose exec app php occ background-job:execute 118 --force-execute
+
+# 刷新瀏覽器查看新通知
+```
+
+**步驟 6.2：點擊「忽略」按鈕**
+
+```
+1. 在通知中點擊「忽略」按鈕
+2. 應該彈出訊息：「已忽略通知」
+3. 通知應該從列表中消失
+```
+
+**步驟 6.3：驗證決策記錄**
+
+```bash
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "SELECT file_id, user_id, decision FROM oc_archiver_decisions WHERE file_path = 'storage_warning' AND user_id = 'admin';"
+
+# 注意：忽略操作不會創建決策記錄，通知只是被刪除
+# 應該顯示：Empty set（或沒有記錄）
+```
+
+**步驟 6.4：驗證系統仍會自動封存（如果使用率仍超過閾值）**
+
+```bash
+# 等待一段時間後，再次執行儲存監控任務
+# 系統應該會自動封存檔案以釋放空間（因為使用者選擇忽略，系統會繼續自動封存）
+docker compose exec app php occ background-job:execute 118 --force-execute
+
+# 查看日誌，應該看到自動封存的記錄
+docker compose exec app bash -c "tail -n 100 data/nextcloud.log | grep -i 'archiving\|storage'"
+```
+
+#### 🧹 清理測試資料
+
+```bash
+# 恢復配額為無限制
+docker compose exec app php occ user:setting admin files quota "none"
+
+# 刪除測試檔案
+docker compose exec app bash -c "rm -f /var/www/html/data/admin/files/*.bin"
+docker compose exec app bash -c "rm -rf /var/www/html/data/admin/files/Archive"
+docker compose exec app php occ files:scan admin
+
+# 清除通知和決策記錄
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "DELETE FROM oc_notifications WHERE app = 'auto_archiver' AND object_type = 'storage'; DELETE FROM oc_archiver_decisions WHERE file_path = 'storage_warning';"
+```
+
+#### ✅ 預期結果總結
+
+- ✅ 儲存使用率超過 80% 時，系統發送警告通知
+- ✅ 通知在 Nextcloud 通知中心顯示，包含使用率資訊
+- ✅ 通知下方有「不要封存」和「忽略」按鈕
+- ✅ 點擊「不要封存」後，決策記錄為 `skip_archive`，檔案保持原樣
+- ✅ 點擊「忽略」後，通知被刪除，系統仍會自動封存以釋放空間
+- ✅ 24 小時內不會重複發送儲存空間警告通知
+- ✅ 所有操作都有完整的日誌記錄
 
 ---
 
@@ -1977,6 +2286,8 @@ docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT * FROM
 - [ ] **通知系統**：模擬即將到期檔案，成功發送通知
 - [ ] **延長期限**：點擊「延長 7 天」按鈕，`last_accessed` 正確更新
 - [ ] **忽略通知**：點擊「忽略」按鈕，決策正確記錄
+- [ ] **儲存空間警告通知**：使用率超過 80% 時發送通知，按鈕功能正常
+- [ ] **不要封存功能**：點擊「不要封存」按鈕，決策正確記錄，檔案保持原樣
 - [ ] **資料夾過濾**：資料夾不被封存，資料夾內檔案可封存
 - [ ] **日誌輸出**：所有操作都有清晰的日誌記錄
 - [ ] **錯誤處理**：測試異常情況（空間不足、檔案不存在等）
