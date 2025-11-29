@@ -1,0 +1,342 @@
+/* ==================== 通用背景覆蓋設定 ==================== */
+/* 覆蓋 Nextcloud Theming 的背景系統 */
+
+/* ==================== 全域 Header 樣式 ==================== */
+/* 預設紅色半透明背景 */
+#header {
+    /* background-color: rgba(220, 38, 38, 0.5) !important; */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px rgba(73, 63, 29, 0.3);
+}
+
+/* ==================== 預設背景（避免閃爍） ==================== */
+/* 在 JavaScript 設定 data-app 之前，先套用預設背景 */
+/* 使用較低優先級，會被具體分頁的背景覆蓋 */
+html:not(:has(body[data-app])),
+body#body-user:not(.dashboard):not([data-app]) {
+    --image-background: url('../public/files_bg.png') !important;
+    --color-background-plain: transparent !important;
+    background-image: url('../public/files_bg.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    background-color: transparent !important;
+}
+
+/* ==================== Dashboard 背景 ==================== */
+/* 1. 覆蓋 CSS 變數 - 只針對 Dashboard */
+body#body-user.dashboard,
+body#body-user[data-app="dashboard"] {
+    --image-background: url('../public/dashboard_bg.jpg') !important;
+    --color-background-plain: transparent !important;
+}
+
+/* 2. 直接覆蓋 body 和 html 的背景屬性（最高優先級） */
+html:has(body#body-user.dashboard),
+html:has(body#body-user[data-app="dashboard"]),
+body#body-user.dashboard,
+body#body-user[data-app="dashboard"] {
+    background-image: url('../public/dashboard_bg.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    background-color: transparent !important;
+}
+
+/* Dashboard 內部容器設為透明 */
+#body-user.dashboard #content-vue,
+#body-user.dashboard #content,
+#body-user.dashboard #app-dashboard,
+body[data-app="dashboard"] #content-vue,
+body[data-app="dashboard"] #content,
+body[data-app="dashboard"] #app-dashboard {
+    background: transparent !important;
+}
+
+/* 覆蓋 Nextcloud 的 wrapper 容器 */
+#body-user.dashboard .wrapper,
+body[data-app="dashboard"] .wrapper {
+    background: transparent !important;
+}
+
+/* Dashboard 遮罩（讓文字更清楚）
+body[data-app="dashboard"] #app-dashboard::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 0;
+} */
+
+body[data-app="dashboard"] #app-dashboard > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Dashboard 中央 Slogan 圖片 */
+body[data-app="dashboard"] #app-dashboard > h2,
+body#body-user.dashboard #app-dashboard > h2 {
+    /* 隱藏原本的「嗨」文字 */
+    font-size: 0 !important;
+    line-height: 0 !important;
+    text-indent: -9999px !important;
+
+    /* 設定容器大小以容納圖片 */
+    width: 100%;
+    max-width: 800px;
+    height: 300px;
+    margin: 200px auto 40px !important;
+
+    /* 加入背景圖片 */
+    background-image: url('../public/slogan.png') !important;
+    background-size: contain !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+
+    /* 確保可見 */
+    display: block !important;
+    overflow: hidden;
+}
+
+/* ==================== Files 背景 - 帝殿主題 ==================== */
+/* 🏛️ Imperial Palace Theme - 華麗、富貴、皇家氣派 */
+
+/* 1. 覆蓋 CSS 變數 - 帝殿主題配色 */
+body#body-user[data-app="files"],
+body[data-app="files"] {
+    /* 背景圖片 */
+    --image-background: url('../public/files_bg.png') !important;
+    --color-background-plain: transparent !important;
+
+    /* 主要配色 */
+    --color-main-background: transparent !important; /* 暖黃色宮牆背景 */
+    --color-main-background-blur: rgba(255, 248, 231, 0.5) !important; /* 側邊欄半透明背景 */
+    --color-main-text: #3B1E06 !important; /* 深棕色墨色 */
+    --color-primary: #D4AF37 !important; /* 皇家金色 */
+    --color-primary-element: #D4AF37 !important;
+    --color-primary-text: #3B1E06 !important;
+    --color-primary-element-text: #3B1E06 !important;
+
+    /* 強調色 */
+    --color-error: #C8102E !important; /* 朱紅色 */
+    --color-warning: #D4AF37 !important; /* 金色 */
+    --color-success: #46ba61 !important;
+
+    /* 邊框顏色 - 金色系 */
+    --color-border: #D4AF37 !important;
+    --color-border-dark: #8B6914 !important;
+    --color-border-maxcontrast: #C19B28 !important;
+
+    /* Hover 和互動狀態顏色 */
+    --color-background-hover: rgba(212, 175, 55, 0.3) !important; /* 金色半透明 hover */
+    --color-background-dark: rgba(212, 175, 55, 0.4) !important; /* 金色深色狀態 */
+    --color-primary-element-hover: rgba(212, 175, 55, 0.55) !important; /* Primary 元素 hover - 金色 */
+    --color-primary-element-light: rgba(212, 175, 55, 0.35) !important; /* 金色淺色元素 */
+    --color-primary-element-light-hover: rgba(212, 175, 55, 0.45) !important; 淺色元素 hover
+}
+
+/* 2. 直接覆蓋 body 和 html 的背景屬性（最高優先級） */
+html:has(body[data-app="files"]),
+body#body-user[data-app="files"],
+body[data-app="files"] {
+    background-image: url('../public/files_bg.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    background-color: transparent !important;
+}
+
+/* Files 內部容器 - 保持背景圖可見 */
+body[data-app="files"] #content-vue,
+body[data-app="files"] #content {
+    background: transparent !important;
+}
+
+/* Files wrapper 容器 */
+body[data-app="files"] .wrapper {
+    background: transparent !important;
+}
+
+/* 3. Header 朱紅色漸變背景（帝殿特色） - 半透明毛玻璃效果 */
+body[data-app="files"] #header {
+    /* background: linear-gradient(135deg,
+        rgba(200, 16, 46, 0.95) 0%,
+        rgba(160, 8, 42, 0.9) 100%) !important; */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+/* 4. 主要按鈕金色漸變 */
+body[data-app="files"] .button.primary,
+body[data-app="files"] button.primary,
+body[data-app="files"] .primary-action,
+body[data-app="files"] button[aria-label="新增"],
+body[data-app="files"] .button--vue-primary,
+body[data-app="files"] .action-item__menutoggle--primary {
+    background: linear-gradient(135deg, #D4AF37 0%, #C19B28 100%) !important;
+    color: #3B1E06 !important;
+    border: 1px solid #8B6914 !important;
+}
+
+body[data-app="files"] .button.primary:hover,
+body[data-app="files"] button.primary:hover,
+body[data-app="files"] .primary-action:hover,
+body[data-app="files"] button[aria-label="新增"]:hover,
+body[data-app="files"] .button--vue-primary:hover {
+    background: linear-gradient(135deg, #E5C048 0%, #D4AF37 100%) !important;
+}
+
+/* 5. 側邊欄（app-navigation）金色裝飾 */
+body[data-app="files"] #app-navigation,
+body[data-app="files"] .app-navigation-personal,
+body[data-app="files"] .app-navigation-administration {
+    background-color: rgba(255, 248, 231, 0.7) !important;
+    border-right: 2px solid #D4AF37 !important;
+    box-shadow: 2px 0 4px rgba(212, 175, 55, 0.2);
+}
+
+/* 側邊欄項目預設樣式 */
+body[data-app="files"] #app-navigation li,
+body[data-app="files"] #app-navigation li a,
+body[data-app="files"] #app-navigation li a span,
+body[data-app="files"] #app-navigation .app-navigation-entry-link {
+    color: #3B1E06 !important;
+    background-color: transparent !important;
+}
+
+/* Hover 效果 - 金色半透明背景 */
+body[data-app="files"] #app-navigation li:hover,
+body[data-app="files"] #app-navigation li a:hover,
+body[data-app="files"] #app-navigation li a:focus,
+body[data-app="files"] #app-navigation .app-navigation-entry-link:hover {
+    background-color: rgba(212, 175, 55, 0.2) !important;
+}
+
+/* Active 狀態 - 金色背景 + 左側強調線 */
+body[data-app="files"] #app-navigation li.active,
+body[data-app="files"] #app-navigation li a.active,
+body[data-app="files"] #app-navigation li.active > a,
+body[data-app="files"] #app-navigation .app-navigation-entry-link.active {
+    background-color: rgba(212, 175, 55, 0.4) !important;
+    border-left: 3px solid #D4AF37 !important;
+    font-weight: bold;
+}
+
+/* 側邊欄按鈕和圖示 */
+body[data-app="files"] #app-navigation button,
+body[data-app="files"] #app-navigation .app-navigation-entry-button {
+    color: #3B1E06 !important;
+}
+
+body[data-app="files"] #app-navigation button:hover {
+    background-color: rgba(212, 175, 55, 0.15) !important;
+}
+
+/* 確保圖示也是正確顏色 */
+body[data-app="files"] #app-navigation svg,
+body[data-app="files"] #app-navigation .icon {
+    fill: #3B1E06 !important;
+    color: #3B1E06 !important;
+}
+
+/* 6. 內容區域整體背景 - 包含工具列和檔案列表 */
+body[data-app="files"] #app-content,
+body[data-app="files"] #app-content-vue {
+    background-color: rgba(255, 248, 231, 0.6) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* 7. Files 列表區域半透明背景 */
+body[data-app="files"] .files-list {
+    background-color: transparent !important;
+}
+
+/* 8. 上方工具列（所有檔案、新增等按鈕區域）- 稍微深一點 */
+body[data-app="files"] .files-controls,
+body[data-app="files"] #app-content-vue > header {
+    background-color: rgba(255, 248, 231, 0.6) !important;
+    border-bottom: 2px solid rgba(212, 175, 55, 0.4);
+    padding: 10px;
+}
+
+body[data-app="files"] div.editor.editor-media-handler.text-editor__main, 
+body[data-app="files"] div.files-list__filters,
+body[data-app="files"] .text-menubar {
+    background-color: transparent !important;
+}
+
+/* 9. 新增按鈕的文字顏色 */
+body[data-app="files"] .button-vue__text ,
+body[data-app="files"] .button-vue__icon ,
+body[data-app="files"] .nc-chip__text{
+    color: #3B1E06 !important;
+}
+
+
+
+/* 12. Hover 效果統一 - 金色半透明 */
+/* 檔案列表行 hover */
+body[data-app="files"] .files-list tbody tr:hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 按鈕 hover（除了 primary 按鈕） */
+body[data-app="files"] button:not(.primary):hover,
+body[data-app="files"] .button:not(.primary):hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 連結和可點擊元素 hover */
+body[data-app="files"] a:hover:not(.primary),
+body[data-app="files"] .clickable:hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 下拉選單項目 hover */
+body[data-app="files"] .v-popper__inner ul li:hover,
+body[data-app="files"] .popovermenu li:hover {
+    background-color: rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 13. Pop-up 彈出選單不透明背景 */
+/* 確保 pop-up 選單有不透明的底色，避免看到下方內容 */
+body[data-app="files"] .v-popper__inner,
+body[data-app="files"] .popovermenu,
+body[data-app="files"] .bubble,
+body[data-app="files"] .app-navigation-entry-menu {
+    background-color: rgba(255, 248, 231, 0.98) !important; /* 暖黃色宮牆背景，幾乎不透明 */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(212, 175, 55, 0.3) !important; /* 金色邊框 */
+}
+
+/* Pop-up 選單內的項目文字顏色 */
+body[data-app="files"] .v-popper__inner ul li,
+body[data-app="files"] .popovermenu ul li,
+body[data-app="files"] .popovermenu ul li a,
+body[data-app="files"] .popovermenu ul li button {
+    color: #3B1E06 !important; /* 深棕色墨色 */
+}
+
+/* ==================== Settings 背景 ==================== */
+body#body-user[data-app="settings"],
+html:has(body[data-app="settings"]) {
+    --image-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    --color-background-plain: #667eea !important;
+}
+
+body#body-user[data-app="settings"] {
+    background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* ==================== 其他分頁的預設背景 ==================== */
+/* 如果需要為其他分頁設定背景，可以按照上面的格式添加 */

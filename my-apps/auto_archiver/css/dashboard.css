@@ -1,0 +1,60 @@
+/* ========== 最外層：覆蓋 Nextcloud Theming 的背景 ========== */
+/* Nextcloud 使用 --image-background 變數（由 theming app 動態生成）來設定 body 的背景圖 */
+/* 我們需要用更高優先級覆蓋它 */
+
+/* 1. 覆蓋 CSS 變數 */
+body#body-user.dashboard,
+body[data-app="dashboard"],
+html {
+    --image-background: url('../public/dashboard_bg.jpg') !important;
+    --color-background-plain: transparent !important;
+}
+
+/* 2. 直接覆蓋 body 和 html 的背景屬性（最高優先級） */
+html,
+body#body-user.dashboard,
+body[data-app="dashboard"] {
+    background-image: url('../public/dashboard_bg.jpg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+    background-color: transparent !important;
+}
+
+/* 覆蓋所有內部容器，設為透明以顯示背景 */
+#body-user.dashboard #content-vue,
+#body-user.dashboard #content,
+#body-user.dashboard #app-dashboard,
+body[data-app="dashboard"] #content-vue,
+body[data-app="dashboard"] #content,
+body[data-app="dashboard"] #app-dashboard {
+    background: transparent !important;
+}
+
+/* 覆蓋 Nextcloud 的 wrapper 容器 */
+#body-user.dashboard .wrapper,
+body[data-app="dashboard"] .wrapper {
+    background: transparent !important;
+}
+
+/* 增加半透明遮罩，讓文字更清楚 */
+#body-user.dashboard #app-dashboard::before,
+body[data-app="dashboard"] #app-dashboard::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 確保 Dashboard 內容在遮罩之上 */
+#body-user.dashboard #app-dashboard > *,
+body[data-app="dashboard"] #app-dashboard > * {
+    position: relative;
+    z-index: 1;
+}

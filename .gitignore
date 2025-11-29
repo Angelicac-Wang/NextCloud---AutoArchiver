@@ -27,3 +27,13 @@ Thumbs.db
 .env
 .env.local
 
+# Node.js
+my-apps/auto_archiver/node_modules/
+my-apps/auto_archiver/npm-debug.log*
+my-apps/auto_archiver/yarn-debug.log*
+my-apps/auto_archiver/yarn-error.log*
+
+# Build outputs (保留源碼，忽略編譯產物)
+my-apps/auto_archiver/js/files-init.js
+my-apps/auto_archiver/js/files-init.js.map
+

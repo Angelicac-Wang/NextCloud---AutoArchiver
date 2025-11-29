@@ -63,7 +63,7 @@ docker compose logs -f
 
 首次啟動時，需要通過瀏覽器完成初始化：
 
-1. 打開瀏覽器，訪問：`http://localhost:8080`
+1. 打開瀏覽器，訪問：`http://localhost:8081`
 2. 創建管理員帳號（建議使用 `admin` / `admin`）
 3. 等待初始化完成
 
@@ -194,6 +194,9 @@ docker compose exec app php occ app:enable auto_archiver
 
 3. **手動觸發封存任務**
    ```bash
+   # 先找到 job id
+   docker compose exec --user www-data app php occ background-job:list | grep ArchiveOldFiles
+
    # 方法一：使用 background-job:execute
    docker compose exec app php occ background-job:execute OCA\\AutoArchiver\\Cron\\ArchiveOldFiles
    
@@ -562,7 +565,36 @@ docker compose exec app tail -f data/nextcloud.log | grep -i "storagemonitor"
 # 由於 Docker 掛載，修改會立即反映到容器內
 ```
 
-### 2. 重新載入應用程式
+### 2. 編譯前端資源（如果修改了 JS/Vue 檔案）
+
+**初次設置**：
+
+```bash
+# 進入 auto_archiver 目錄
+cd my-apps/auto_archiver
+
+# 安裝 npm 依賴
+npm install
+
+# 編譯前端資源（生產模式）
+npm run build
+
+# 或使用開發模式（自動監聽檔案變化）
+npm run dev
+```
+
+**日常開發**：
+
+```bash
+# 每次修改 src/ 目錄下的檔案後，重新編譯
+cd my-apps/auto_archiver
+npm run build
+
+# 或保持 watch 模式運行（自動編譯）
+npm run dev
+```
+
+### 3. 重新載入應用程式
 
 ```bash
 # 禁用並重新啟用應用程式
@@ -570,21 +602,21 @@ docker compose exec app php occ app:disable auto_archiver
 docker compose exec app php occ app:enable auto_archiver
 ```
 
-### 3. 清除快取
+### 4. 清除快取
 
 ```bash
 # 清除 Nextcloud 快取
 docker compose exec app php occ files:scan --all
 ```
 
-### 4. 測試修改
+### 5. 測試修改
 
 ```bash
 # 執行相關測試（參考「功能測試指南」）
 docker compose exec app php occ background-job:execute OCA\\AutoArchiver\\Cron\\ArchiveOldFiles
 ```
 
-### 5. 查看日誌
+### 6. 查看日誌
 
 ```bash
 # 查看修改後的日誌輸出
@@ -603,6 +635,11 @@ docker compose up -d              # 啟動容器
 docker compose down               # 停止容器
 docker compose restart app        # 重啟 app 容器
 docker compose exec app bash      # 進入容器
+
+# === 前端編譯（在 my-apps/auto_archiver 目錄下執行）===
+npm install                       # 安裝依賴（首次執行）
+npm run build                     # 編譯前端資源
+npm run dev                       # 開發模式（自動監聽）
 
 # === 應用程式管理 ===
 docker compose exec app php occ app:enable auto_archiver

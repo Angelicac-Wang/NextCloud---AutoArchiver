@@ -1,0 +1,179 @@
+/* ==================== 對話框樣式 ==================== */
+/* 針對 Nextcloud 的 OC.dialogs 對話框自訂樣式 */
+
+/* 註冊自訂字體 - 潮字社曉時範 */
+@font-face {
+    font-family: 'ChaoZiSheXiaoShiFan';
+    src: url('../public/ChaoZiSheXiaoShiFan-2.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* 隱藏外層 modal-container 的背景和邊框 */
+.modal-container {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}
+
+/* 移除外層容器的內邊距 */
+.modal-container__content {
+    padding: 0 !important;
+}
+
+/* 對話框容器 - 只在內層 dialog 設定背景圖片 */
+.oc-dialog,
+.dialog.nc-generic-dialog {
+    position: relative !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4) !important;
+    overflow: visible !important;
+    background-image: url('../public/dialog.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    font-family: 'ChaoZiSheXiaoShiFan', 'Microsoft JhengHei', sans-serif !important;
+    min-width: 400px !important;
+}
+
+/* 對話框標題 */
+.oc-dialog .oc-dialog-title,
+.dialog__name,
+.modal-header__name {
+    position: relative !important;
+    z-index: 10 !important;
+    background: transparent !important;
+    font-family: 'ChaoZiSheXiaoShiFan', 'Microsoft JhengHei', sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 600 !important;
+    padding: 24px 32px 16px !important;
+    color: #8B4513 !important;
+    text-align: center !important;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8) !important;
+}
+
+/* 對話框內容 */
+.oc-dialog .oc-dialog-content,
+.dialog__content,
+.modal-container__content {
+    position: relative !important;
+    z-index: 10 !important;
+    background: transparent !important;
+    font-family: 'ChaoZiSheXiaoShiFan', 'Microsoft JhengHei', sans-serif !important;
+    padding: 16px 32px 24px !important;
+    line-height: 1.8 !important;
+    white-space: pre-line !important;
+    font-size: 16px !important;
+    color: #4A3728 !important;
+    text-align: center !important;
+    text-shadow: 0.5px 0.5px 1px rgba(255, 255, 255, 0.6) !important;
+}
+
+/* 對話框按鈕列 */
+.oc-dialog .oc-dialog-buttonrow,
+.dialog__actions {
+    position: relative !important;
+    z-index: 10 !important;
+    background: transparent !important;
+    padding: 16px 24px 20px !important;
+    gap: 12px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+}
+
+
+/* 主要按鈕（傳召回宮） - 金色漸變 */
+.oc-dialog button.primary,
+.dialog__actions button.button-vue--vue-primary,
+.button-vue--vue-primary {
+    background: linear-gradient(135deg, #D4AF37 0%, #C19B28 100%) !important;
+    color: #3B1E06 !important;
+    border: 2px solid #8B6914 !important;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+}
+
+.oc-dialog button.primary:hover,
+.dialog__actions button.button-vue--vue-primary:hover,
+.button-vue--vue-primary:hover {
+    background: linear-gradient(135deg, #E5C048 0%, #D4AF37 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.5) !important;
+}
+
+/* 次要按鈕（朕再想想） */
+.oc-dialog button:not(.primary),
+.dialog__actions button:not(.button-vue--vue-primary),
+.button-vue--vue-secondary {
+    background: rgba(139, 69, 19, 0.1) !important;
+    color: #5D4037 !important;
+    border: 2px solid rgba(139, 69, 19, 0.3) !important;
+}
+
+.oc-dialog button:not(.primary):hover,
+.dialog__actions button:not(.button-vue--vue-primary):hover,
+.button-vue--vue-secondary:hover {
+    background: rgba(139, 69, 19, 0.2) !important;
+    border-color: rgba(139, 69, 19, 0.5) !important;
+}
+
+/* 對話框遮罩層 */
+.oc-dialog-dim,
+.modal-mask {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+}
+
+/* 移除預設的背景色 - 針對實際 DOM 結構 */
+.modal-header,
+.dialog__wrapper,
+.dialog__content,
+.modal-wrapper__content,
+.ui-dialog-content {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+/* ⭐ 重點：完全移除藍色資訊卡（包含 Vue scoped 樣式） */
+.notecard,
+.notecard--info,
+.notecard--warning,
+.notecard--error,
+div[class*="notecard"],
+[class*="notecard"][data-v-7e4656f9],
+.notecard[data-v-1362be5a],
+.notecard--info[data-v-1362be5a] {
+    --note-background: transparent !important;
+    --note-theme: transparent !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    border-inline-start: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
+}
+
+/* 隱藏資訊卡的圖示（包含 Vue scoped） */
+.notecard__icon,
+.notecard .material-design-icon,
+.notecard__icon[data-v-1362be5a],
+span[class*="information-icon"],
+.material-design-icon.information-icon {
+    display: none !important;
+}
+
+/* 確保文字直接顯示，沒有額外容器樣式 */
+.notecard > div,
+.notecard p,
+.notecard[data-v-1362be5a] > div,
+.notecard[data-v-1362be5a] p {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
