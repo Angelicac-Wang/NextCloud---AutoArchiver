@@ -1,0 +1,42 @@
+/* ==================== 彈出式選單底色 ==================== */
+
+/* 1. Notification Container - 通知彈出選單容器 */
+.notification-container,
+div.notification-container,
+[class="notification-container"],
+div[class*="notification-container"] {
+    background-color: rgba(255, 248, 231, 0.98) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-radius: 12px !important;
+    padding: 8px !important;
+}
+
+/* 2. 單個通知項目 */
+.notification,
+div.notification,
+[class="notification"] {
+    background-color: rgba(255, 252, 245, 0.90) !important;
+    border: 1px solid rgba(206, 165, 104, 0.2) !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+    padding: 12px !important;
+    transition: all 0.2s ease !important;
+}
+
+/* 通知項目 Hover 狀態 */
+.notification:hover,
+div.notification:hover {
+    background-color: rgba(255, 245, 230, 0.90) !important;
+    border-color: rgba(206, 165, 104, 0.4) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 空狀態（沒有通知時） */
+.empty-content,
+div.empty-content {
+    background-color: transparent !important;
+    padding: 24px !important;
+    text-align: center !important;
+} 
