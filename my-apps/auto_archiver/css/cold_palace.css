@@ -1,5 +1,5 @@
 /* ==================== Cold Palace 背景 - 冷宮主題 ==================== */
-/* ❄️ Cold Palace Theme - 冷峻、幽靜、封存 */
+/* ❄️ Cold Palace Theme - 冷峻、幽靜、封存、冰冷的藍紫色調 */
 
 /* 1. 覆蓋 CSS 變數 - 冷宮主題配色 */
 body#body-user[data-app="cold_palace"],
@@ -8,31 +8,31 @@ body[data-app="cold_palace"] {
     --image-background: url('../public/cold_palace_bg.png') !important;
     --color-background-plain: transparent !important;
 
-    /* 主要配色 */
-    --color-main-background: transparent !important; /* 暖黃色宮牆背景 */
-    --color-main-background-blur: rgba(255, 248, 231, 0.5) !important; /* 側邊欄半透明背景 */
-    --color-main-text: #3B1E06 !important; /* 深棕色墨色 */
-    --color-primary: #D4AF37 !important; /* 皇家金色 */
-    --color-primary-element: #D4AF37 !important;
-    --color-primary-text: #3B1E06 !important;
-    --color-primary-element-text: #3B1E06 !important;
+    /* 主要配色 - 冰冷的藍紫色 */
+    --color-main-background: transparent !important;
+    --color-main-background-blur: rgba(230, 235, 245, 0.6) !important; /* 冰藍色半透明背景 */
+    --color-main-text: #2C3E50 !important; /* 深藍灰色文字 */
+    --color-primary: #7B68EE !important; /* 淡紫色（中等紫羅蘭） */
+    --color-primary-element: #7B68EE !important;
+    --color-primary-text: #FFFFFF !important; /* 白色文字在紫色背景上 */
+    --color-primary-element-text: #FFFFFF !important;
 
-    /* 強調色 */
-    --color-error: #C8102E !important; /* 朱紅色 */
-    --color-warning: #D4AF37 !important; /* 金色 */
-    --color-success: #46ba61 !important;
+    /* 強調色 - 冷色調 */
+    --color-error: #9370DB !important; /* 淡紫色（代替紅色） */
+    --color-warning: #6A8FBD !important; /* 鋼藍色 */
+    --color-success: #5DADE2 !important; /* 冰藍色 */
 
-    /* 邊框顏色 - 金色系 */
-    --color-border: #D4AF37 !important;
-    --color-border-dark: #8B6914 !important;
-    --color-border-maxcontrast: #C19B28 !important;
+    /* 邊框顏色 - 藍紫色系 */
+    --color-border: #9BA8C6 !important; /* 淡藍紫色邊框 */
+    --color-border-dark: #5B6C8A !important; /* 深藍紫色邊框 */
+    --color-border-maxcontrast: #7B8AA8 !important;
 
-    /* Hover 和互動狀態顏色 */
-    --color-background-hover: rgba(212, 175, 55, 0.3) !important; /* 金色半透明 hover */
-    --color-background-dark: rgba(212, 175, 55, 0.4) !important; /* 金色深色狀態 */
-    --color-primary-element-hover: rgba(212, 175, 55, 0.55) !important; /* Primary 元素 hover - 金色 */
-    --color-primary-element-light: rgba(212, 175, 55, 0.35) !important; /* 金色淺色元素 */
-    --color-primary-element-light-hover: rgba(212, 175, 55, 0.45) !important; /* 淺色元素 hover */
+    /* Hover 和互動狀態顏色 - 藍紫色半透明 */
+    --color-background-hover: rgba(123, 104, 238, 0.2) !important; /* 淡紫色半透明 hover */
+    --color-background-dark: rgba(123, 104, 238, 0.3) !important; /* 淡紫色深色狀態 */
+    --color-primary-element-hover: rgba(123, 104, 238, 0.7) !important; /* Primary 元素 hover */
+    --color-primary-element-light: rgba(123, 104, 238, 0.25) !important; /* 淡紫色淺色元素 */
+    --color-primary-element-light-hover: rgba(123, 104, 238, 0.35) !important; /* 淺色元素 hover */
 }
 
 /* 2. 直接覆蓋 body 和 html 的背景屬性（最高優先級） */
@@ -58,23 +58,24 @@ body[data-app="cold_palace"] .wrapper {
     background: transparent !important;
 }
 
-/* 3. Header 朱紅色漸變背景（帝殿特色） - 半透明毛玻璃效果 */
+/* 3. Header 藍紫色漸變背景 - 半透明毛玻璃效果 */
 body[data-app="cold_palace"] #header {
+    background: linear-gradient(180deg, rgba(123, 104, 238, 0.15) 0%, rgba(123, 104, 238, 0.05) 100%) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    box-shadow: 0 4px 12px rgba(123, 104, 238, 0.25);
 }
 
-/* 4. 主要按鈕金色漸變 */
+/* 4. 主要按鈕藍紫色漸變 */
 body[data-app="cold_palace"] .button.primary,
 body[data-app="cold_palace"] button.primary,
 body[data-app="cold_palace"] .primary-action,
 body[data-app="cold_palace"] button[aria-label="新增"],
 body[data-app="cold_palace"] .button--vue-primary,
 body[data-app="cold_palace"] .action-item__menutoggle--primary {
-    background: linear-gradient(135deg, #D4AF37 0%, #C19B28 100%) !important;
-    color: #3B1E06 !important;
-    border: 1px solid #8B6914 !important;
+    background: linear-gradient(135deg, #7B68EE 0%, #6A5ACD 100%) !important;
+    color: #FFFFFF !important;
+    border: 1px solid #5B4DBD !important;
 }
 
 body[data-app="cold_palace"] .button.primary:hover,
@@ -82,16 +83,16 @@ body[data-app="cold_palace"] button.primary:hover,
 body[data-app="cold_palace"] .primary-action:hover,
 body[data-app="cold_palace"] button[aria-label="新增"]:hover,
 body[data-app="cold_palace"] .button--vue-primary:hover {
-    background: linear-gradient(135deg, #E5C048 0%, #D4AF37 100%) !important;
+    background: linear-gradient(135deg, #8B7AEE 0%, #7B68EE 100%) !important;
 }
 
-/* 5. 側邊欄（app-navigation）金色裝飾 */
+/* 5. 側邊欄（app-navigation）藍紫色裝飾 */
 body[data-app="cold_palace"] #app-navigation,
 body[data-app="cold_palace"] .app-navigation-personal,
 body[data-app="cold_palace"] .app-navigation-administration {
-    background-color: rgba(255, 248, 231, 0.7) !important;
-    border-right: 2px solid #D4AF37 !important;
-    box-shadow: 2px 0 4px rgba(212, 175, 55, 0.2);
+    background-color: rgba(230, 235, 245, 0.8) !important;
+    border-right: 2px solid #9BA8C6 !important;
+    box-shadow: 2px 0 8px rgba(123, 104, 238, 0.2);
 }
 
 /* 側邊欄項目預設樣式 */
@@ -99,49 +100,49 @@ body[data-app="cold_palace"] #app-navigation li,
 body[data-app="cold_palace"] #app-navigation li a,
 body[data-app="cold_palace"] #app-navigation li a span,
 body[data-app="cold_palace"] #app-navigation .app-navigation-entry-link {
-    color: #3B1E06 !important;
+    color: #2C3E50 !important;
     background-color: transparent !important;
 }
 
-/* Hover 效果 - 金色半透明背景 */
+/* Hover 效果 - 藍紫色半透明背景 */
 body[data-app="cold_palace"] #app-navigation li:hover,
 body[data-app="cold_palace"] #app-navigation li a:hover,
 body[data-app="cold_palace"] #app-navigation li a:focus,
 body[data-app="cold_palace"] #app-navigation .app-navigation-entry-link:hover {
-    background-color: rgba(212, 175, 55, 0.2) !important;
+    background-color: rgba(123, 104, 238, 0.15) !important;
 }
 
-/* Active 狀態 - 金色背景 + 左側強調線 */
+/* Active 狀態 - 藍紫色背景 + 左側強調線 */
 body[data-app="cold_palace"] #app-navigation li.active,
 body[data-app="cold_palace"] #app-navigation li a.active,
 body[data-app="cold_palace"] #app-navigation li.active > a,
 body[data-app="cold_palace"] #app-navigation .app-navigation-entry-link.active {
-    background-color: rgba(212, 175, 55, 0.4) !important;
-    border-left: 3px solid #D4AF37 !important;
+    background-color: rgba(123, 104, 238, 0.3) !important;
+    border-left: 3px solid #7B68EE !important;
     font-weight: bold;
 }
 
 /* 側邊欄按鈕和圖示 */
 body[data-app="cold_palace"] #app-navigation button,
 body[data-app="cold_palace"] #app-navigation .app-navigation-entry-button {
-    color: #3B1E06 !important;
+    color: #2C3E50 !important;
 }
 
 body[data-app="cold_palace"] #app-navigation button:hover {
-    background-color: rgba(212, 175, 55, 0.15) !important;
+    background-color: rgba(123, 104, 238, 0.12) !important;
 }
 
 /* 確保圖示也是正確顏色 */
 body[data-app="cold_palace"] #app-navigation svg,
 body[data-app="cold_palace"] #app-navigation .icon {
-    fill: #3B1E06 !important;
-    color: #3B1E06 !important;
+    fill: #2C3E50 !important;
+    color: #2C3E50 !important;
 }
 
 /* 6. 內容區域整體背景 - 包含工具列和檔案列表 */
 body[data-app="cold_palace"] #app-content,
 body[data-app="cold_palace"] #app-content-vue {
-    background-color: rgba(255, 248, 231, 0.6) !important;
+    background-color: rgba(230, 235, 245, 0.7) !important;
     backdrop-filter: blur(10px);
 }
 
@@ -153,8 +154,8 @@ body[data-app="cold_palace"] .files-list {
 /* 8. 上方工具列（所有檔案、新增等按鈕區域）- 稍微深一點 */
 body[data-app="cold_palace"] .files-controls,
 body[data-app="cold_palace"] #app-content-vue > header {
-    background-color: rgba(255, 248, 231, 0.6) !important;
-    border-bottom: 2px solid rgba(212, 175, 55, 0.4);
+    background-color: rgba(230, 235, 245, 0.7) !important;
+    border-bottom: 2px solid rgba(123, 104, 238, 0.3);
     padding: 10px;
 }
 
@@ -165,33 +166,41 @@ body[data-app="cold_palace"] .text-menubar {
 }
 
 /* 9. 新增按鈕的文字顏色 */
-body[data-app="cold_palace"] .button-vue__text ,
-body[data-app="cold_palace"] .button-vue__icon{
-    color: #3B1E06 !important;
+body[data-app="cold_palace"] .button-vue__text,
+body[data-app="cold_palace"] .button-vue__icon {
+    color: #2C3E50 !important;
 }
 
-/* 12. Hover 效果統一 - 金色半透明 */
+/* Primary 按鈕的文字和圖示應該是白色 */
+body[data-app="cold_palace"] .button--vue-primary .button-vue__text,
+body[data-app="cold_palace"] .button--vue-primary .button-vue__icon,
+body[data-app="cold_palace"] button.primary .button-vue__text,
+body[data-app="cold_palace"] button.primary .button-vue__icon {
+    color: #FFFFFF !important;
+}
+
+/* 12. Hover 效果統一 - 藍紫色半透明 */
 /* 檔案列表行 hover */
 body[data-app="cold_palace"] .files-list tbody tr:hover {
-    background-color: rgba(212, 175, 55, 0.3) !important;
+    background-color: rgba(123, 104, 238, 0.2) !important;
 }
 
 /* 按鈕 hover（除了 primary 按鈕） */
 body[data-app="cold_palace"] button:not(.primary):hover,
 body[data-app="cold_palace"] .button:not(.primary):hover {
-    background-color: rgba(212, 175, 55, 0.3) !important;
+    background-color: rgba(123, 104, 238, 0.2) !important;
 }
 
 /* 連結和可點擊元素 hover */
 body[data-app="cold_palace"] a:hover:not(.primary),
 body[data-app="cold_palace"] .clickable:hover {
-    background-color: rgba(212, 175, 55, 0.3) !important;
+    background-color: rgba(123, 104, 238, 0.2) !important;
 }
 
 /* 下拉選單項目 hover */
 body[data-app="cold_palace"] .v-popper__inner ul li:hover,
 body[data-app="cold_palace"] .popovermenu li:hover {
-    background-color: rgba(212, 175, 55, 0.3) !important;
+    background-color: rgba(123, 104, 238, 0.2) !important;
 }
 
 /* 13. Pop-up 彈出選單不透明背景 */
@@ -200,10 +209,10 @@ body[data-app="cold_palace"] .v-popper__inner,
 body[data-app="cold_palace"] .popovermenu,
 body[data-app="cold_palace"] .bubble,
 body[data-app="cold_palace"] .app-navigation-entry-menu {
-    background-color: rgba(255, 248, 231, 0.98) !important; /* 暖黃色宮牆背景，幾乎不透明 */
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(212, 175, 55, 0.3) !important; /* 金色邊框 */
+    background-color: rgba(230, 235, 245, 0.98) !important; /* 冰藍色背景，幾乎不透明 */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(123, 104, 238, 0.4) !important; /* 藍紫色邊框 */
 }
 
 /* Pop-up 選單內的項目文字顏色 */
@@ -211,5 +220,5 @@ body[data-app="cold_palace"] .v-popper__inner ul li,
 body[data-app="cold_palace"] .popovermenu ul li,
 body[data-app="cold_palace"] .popovermenu ul li a,
 body[data-app="cold_palace"] .popovermenu ul li button {
-    color: #3B1E06 !important; /* 深棕色墨色 */
+    color: #2C3E50 !important; /* 深藍灰色 */
 }
