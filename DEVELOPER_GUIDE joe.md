@@ -609,6 +609,23 @@ docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
 # +---------+---------------------+----------+
 # |     539 | 2024-11-05 10:00:00 |       23 |
 # +---------+---------------------+----------+
+
+# ⚠️ 如果沒有輸出結果，請執行以下診斷步驟：
+# 
+# 1. 檢查表是否存在
+# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SHOW TABLES LIKE 'oc_auto_archiver_access';"
+# 
+# 2. 檢查表中是否有任何記錄
+# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT COUNT(*) as total FROM oc_auto_archiver_access;"
+# 
+# 3. 檢查 file_id = 539 的記錄是否存在
+# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT * FROM oc_auto_archiver_access WHERE file_id = 539;"
+# 
+# 4. 如果記錄不存在，檢查檔案是否存在於 filecache
+# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT fileid, path FROM oc_filecache WHERE fileid = 539;"
+# 
+# 5. 如果檔案存在但沒有訪問記錄，需要先訪問檔案或手動插入記錄：
+# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "INSERT INTO oc_auto_archiver_access (file_id, last_accessed) VALUES (539, UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY))) ON DUPLICATE KEY UPDATE last_accessed = UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY));"
 ```
 
 #### ▶️ 執行測試
@@ -2000,6 +2017,146 @@ docker compose exec app bash -c "tail -n 100 data/nextcloud.log | grep -i 'resto
 # 如果 ZIP 檔案不存在，無法恢復（需要重新上傳檔案）
 
 # 如果 API 請求失敗，檢查 routes.php 是否正確定義 restore 路由
+```
+
+---
+
+#### 問題 7：資料庫查詢沒有輸出結果
+
+**症狀：**
+- 執行 SQL 查詢時沒有任何輸出（例如查詢 `oc_auto_archiver_access` 表）
+- 查詢特定 `file_id` 時返回空結果
+
+**完整診斷流程：**
+
+##### 步驟 1：檢查表是否存在
+
+```bash
+# 檢查表是否存在
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SHOW TABLES LIKE 'oc_auto_archiver_access';"
+
+# 應該看到：
+# +----------------------------------+
+# | Tables_in_nextcloud (oc_auto_archiver_access) |
+# +----------------------------------+
+# | oc_auto_archiver_access          |
+# +----------------------------------+
+```
+
+**如果表不存在：**
+- ❌ 應用程式未正確啟用
+- ❌ 資料庫遷移未執行
+
+**解決方案：**
+```bash
+# 重新啟用應用（會執行資料庫遷移）
+docker compose exec app php occ app:disable auto_archiver
+docker compose exec app php occ app:enable auto_archiver
+
+# 驗證表已創建
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SHOW TABLES LIKE 'oc_auto_archiver_access';"
+```
+
+##### 步驟 2：檢查表中是否有記錄
+
+```bash
+# 檢查記錄總數
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT COUNT(*) as total FROM oc_auto_archiver_access;"
+
+# 應該看到：
+# +-------+
+# | total |
+# +-------+
+# |    15 |  ← 如果有記錄，會顯示數字
+# +-------+
+```
+
+**如果記錄數為 0：**
+- ❌ 檔案從未被訪問過（系統只在檔案被訪問時才創建記錄）
+- ❌ 或所有記錄已被刪除
+
+**解決方案：**
+```bash
+# 方法 A：訪問檔案以創建記錄
+# 在 Web UI 中打開檔案，系統會自動創建訪問記錄
+
+# 方法 B：手動插入記錄（用於測試）
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "INSERT INTO oc_auto_archiver_access (file_id, last_accessed) VALUES (539, UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY))) ON DUPLICATE KEY UPDATE last_accessed = UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY));"
+```
+
+##### 步驟 3：檢查特定 file_id 是否存在
+
+```bash
+# 檢查 file_id = 539 是否存在
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT * FROM oc_auto_archiver_access WHERE file_id = 539;"
+
+# 如果有記錄，應該看到：
+# +----+---------+--------------+
+# | id | file_id | last_accessed|
+# +----+---------+--------------+
+# |  5 |     539 |   1732800645 |
+# +----+---------+--------------+
+
+# 如果沒有記錄，會顯示：Empty set
+```
+
+**如果記錄不存在：**
+- ❌ 該檔案從未被訪問過
+- ❌ 或檔案已被封存（封存後記錄會被刪除）
+
+**解決方案：**
+```bash
+# 1. 先檢查檔案是否存在於 filecache
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT fileid, path FROM oc_filecache WHERE fileid = 539;"
+
+# 如果檔案存在，手動創建訪問記錄：
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
+  "INSERT INTO oc_auto_archiver_access (file_id, last_accessed) VALUES (539, UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY))) ON DUPLICATE KEY UPDATE last_accessed = UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY));"
+
+# 2. 驗證記錄已創建
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT * FROM oc_auto_archiver_access WHERE file_id = 539;"
+```
+
+##### 步驟 4：檢查表結構是否正確
+
+```bash
+# 查看表結構
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "DESCRIBE oc_auto_archiver_access;"
+
+# 應該看到：
+# +--------------+---------+------+-----+---------+----------------+
+# | Field        | Type    | Null | Key | Default | Extra          |
+# +--------------+---------+------+-----+---------+----------------+
+# | id           | int(11) | NO   | PRI | NULL    | auto_increment |
+# | file_id      | int(11) | NO   | UNI | NULL    |                |
+# | last_accessed| int(11) | NO   |     | 0       |                |
+# | is_pinned    | int(11) | NO   |     | 0       |                |
+# +--------------+---------+------+-----+---------+----------------+
+```
+
+##### 完整重置步驟（當所有方法都失敗時）
+
+```bash
+# 1. 檢查應用是否啟用
+docker compose exec app php occ app:list | grep auto_archiver
+
+# 2. 如果未啟用，啟用應用
+docker compose exec app php occ app:enable auto_archiver
+
+# 3. 檢查表是否存在
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SHOW TABLES LIKE 'oc_auto_archiver_access';"
+
+# 4. 如果表存在但沒有記錄，訪問一些檔案以創建記錄
+# 在 Web UI 中打開幾個檔案
+
+# 5. 驗證記錄已創建
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT COUNT(*) FROM oc_auto_archiver_access;"
+
+# 6. 如果需要測試特定 file_id，先查詢檔案是否存在
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT fileid, path FROM oc_filecache WHERE path LIKE '%test%' LIMIT 5;"
+
+# 7. 使用實際存在的 file_id 進行測試
 ```
 
 ---
