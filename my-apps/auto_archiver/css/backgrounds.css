@@ -340,3 +340,16 @@ body#body-user[data-app="settings"] {
 
 /* ==================== 其他分頁的預設背景 ==================== */
 /* 如果需要為其他分頁設定背景，可以按照上面的格式添加 */
+
+
+.app-sidebar, 
+.modal-wrapper ,
+.modal-container {
+    background-color: white !important;
+}
+
+
+#header {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
