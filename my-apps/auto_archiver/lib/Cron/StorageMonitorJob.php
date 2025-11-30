@@ -66,11 +66,19 @@ class StorageMonitorJob extends TimedJob {
                 // 發送儲存空間警告通知（24小時內只發送一次）
                 $this->sendStorageWarningNotification($user, $usageInfo);
                 
-                // 開始封存最久未使用的檔案
-                $archivedCount = $this->archiveUntilBelowThreshold($user, $usageInfo);
-                $totalFilesArchived += $archivedCount;
+                // 檢查用戶是否選擇不要封存
+                $userDecision = $this->getUserStorageDecision($user->getUID());
                 
-                $this->logger->warning("   ✅ Archived {$archivedCount} files to reduce storage usage");
+                if ($userDecision === 'skip_archive') {
+                    $this->logger->warning("   ℹ️  User chose 'skip_archive', will not automatically archive files");
+                    $this->logger->warning("   💡 User needs to manually free up space or increase quota");
+                } else {
+                    // 開始封存最久未使用的檔案
+                    $archivedCount = $this->archiveUntilBelowThreshold($user, $usageInfo);
+                    $totalFilesArchived += $archivedCount;
+                    
+                    $this->logger->warning("   ✅ Archived {$archivedCount} files to reduce storage usage");
+                }
             }
         }
 
@@ -713,6 +721,34 @@ class StorageMonitorJob extends TimedJob {
                 'file_path' => $qb->createNamedParameter('storage_warning'),
             ]);
         $qb->executeStatement();
+    }
+    
+    /**
+     * 獲取用戶的儲存空間決策
+     * 返回 'skip_archive' 表示用戶選擇不要封存
+     * 返回 null 表示用戶未做決策或決策已過期（24小時）
+     */
+    private function getUserStorageDecision(string $userId): ?string {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('decision', 'decided_at')
+            ->from('archiver_decisions')
+            ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+            ->andWhere($qb->expr()->eq('file_path', $qb->createNamedParameter('storage_warning')))
+            ->andWhere($qb->expr()->eq('decision', $qb->createNamedParameter('skip_archive')))
+            ->andWhere($qb->expr()->gt('decided_at', $qb->createNamedParameter(time() - 86400))) // 24小時內有效
+            ->orderBy('decided_at', 'DESC')
+            ->setMaxResults(1);
+        
+        $result = $qb->executeQuery();
+        $row = $result->fetch();
+        $result->closeCursor();
+        
+        if ($row) {
+            $this->logger->info('[StorageMonitor] Found user decision: skip_archive (decided at ' . date('Y-m-d H:i:s', $row['decided_at']) . ')');
+            return 'skip_archive';
+        }
+        
+        return null;
     }
 }
 

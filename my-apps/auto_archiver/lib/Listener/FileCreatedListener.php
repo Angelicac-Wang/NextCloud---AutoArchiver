@@ -55,18 +55,26 @@ class FileCreatedListener implements IEventListener {
             return;
         }
 
-        $this->logger->info('[AutoArchiver] File created/uploaded detected', [
-            'file_id' => $fileId,
-            'path' => $path
-        ]);
+        // 使用 warning 級別以確保日誌可見
+        $msg = "\n" .
+               "╔═══════════════════════════════════════════════════════════════╗\n" .
+               "║  📤 [AutoArchiver] FILE UPLOAD DETECTED                       ║\n" .
+               "╠═══════════════════════════════════════════════════════════════╣\n" .
+               "║  📂 File ID : " . str_pad($fileId, 45) . " ║\n" .
+               "║  📍 Path    : " . str_pad(substr($path, 0, 45), 45) . " ║\n" .
+               "╚═══════════════════════════════════════════════════════════════╝";
+        
+        $this->logger->warning($msg);
 
         try {
             $this->upsertAccessTime($fileId, time());
+            $this->logger->warning("[AutoArchiver] ✅ Access record created for file ID {$fileId}");
         } catch (\Exception $e) {
-            $this->logger->error('[AutoArchiver] Failed to track created file', [
+            $this->logger->error('[AutoArchiver] ❌ Failed to track created file', [
                 'file_id' => $fileId,
                 'path' => $path,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }
@@ -81,8 +89,9 @@ class FileCreatedListener implements IEventListener {
         $check->select('id', 'is_pinned')
               ->from('auto_archiver_access')
               ->where($check->expr()->eq('file_id', $check->createNamedParameter($fileId)));
-        $existing = $check->executeQuery()->fetch();
-        $check->closeCursor();
+        $checkResult = $check->executeQuery();
+        $existing = $checkResult->fetch();
+        $checkResult->closeCursor();
 
         if ($existing) {
             // Record exists, update last_accessed but preserve is_pinned

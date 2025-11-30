@@ -278,9 +278,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			handleSkipStorageArchive(notification);
 		};
 		
-		// 創建「忽略」按鈕
+		// 創建「幫我封存」按鈕
 		const dismissButton = document.createElement('button');
-		dismissButton.textContent = '忽略';
+		dismissButton.textContent = '幫我封存';
 		dismissButton.style.cssText = 'padding: 6px 14px; background-color: #f0f0f0; color: #333; border: none; border-radius: 3px; cursor: pointer; font-size: 13px;';
 		
 		dismissButton.onclick = function(e) {
@@ -335,14 +335,44 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 	
-	// 處理「忽略」按鈕點擊（儲存空間警告）
+	// 處理「幫我封存」按鈕點擊（儲存空間警告）
 	function handleDismissStorageWarning(notification) {
-		console.log('[AutoArchiver] Dismissing storage warning');
+		console.log('[AutoArchiver] User chose to archive files for storage');
 		const buttons = notification.querySelectorAll('.auto-archiver-buttons button');
 		buttons.forEach(btn => btn.disabled = true);
 		
-		// 直接刪除通知（不調用 API）
-		OC.Notification.showTemporary('已忽略通知');
-		removeNotification(notification);
+		// 調用 API 記錄用戶決策（系統會繼續自動封存）
+		const url = OC.generateUrl('/apps/auto_archiver/ignore-storage-warning');
+		console.log('[AutoArchiver] API URL:', url);
+		
+		fetch(url, {
+			method: 'POST',
+			headers: {
+				'requesttoken': OC.requestToken,
+				'Content-Type': 'application/json'
+			}
+		})
+		.then(response => {
+			console.log('[AutoArchiver] Response status:', response.status);
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			return response.json();
+		})
+		.then(data => {
+			console.log('[AutoArchiver] Archive response:', data);
+			if (data.success) {
+				OC.Notification.showTemporary('系統將自動封存檔案以釋放空間');
+				removeNotification(notification);
+			} else {
+				OC.Notification.showTemporary('操作失敗: ' + (data.message || '未知錯誤'));
+				buttons.forEach(btn => btn.disabled = false);
+			}
+		})
+		.catch(error => {
+			console.error('[AutoArchiver] Archive error:', error);
+			OC.Notification.showTemporary('操作失敗：' + error.message);
+			buttons.forEach(btn => btn.disabled = false);
+		});
 	}
 });

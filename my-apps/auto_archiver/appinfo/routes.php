@@ -56,5 +56,10 @@ return [
             'url' => '/skip-storage-archive',
             'verb' => 'POST',
         ],
+        [
+            'name' => 'Notification#ignoreStorageWarning',
+            'url' => '/ignore-storage-warning',
+            'verb' => 'POST',
+        ],
     ],
 ];

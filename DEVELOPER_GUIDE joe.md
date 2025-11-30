@@ -597,11 +597,11 @@ docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
 # 將 file_id=539 的最後訪問時間設為 23 天前
 # 計算方式：30天閾值 - 23天 = 7天（符合通知條件）
 docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
-  "UPDATE oc_auto_archiver_access SET last_accessed = UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY)) WHERE file_id = 539;"
+  "UPDATE oc_auto_archiver_access SET last_accessed = UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY)) WHERE file_id = 162;"
 
 # 驗證修改成功
 docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
-  "SELECT file_id, FROM_UNIXTIME(last_accessed) as last_accessed, FLOOR((UNIX_TIMESTAMP() - last_accessed) / 86400) as days_ago FROM oc_auto_archiver_access WHERE file_id = 539;"
+  "SELECT file_id, FROM_UNIXTIME(last_accessed) as last_accessed, FLOOR((UNIX_TIMESTAMP() - last_accessed) / 86400) as days_ago FROM oc_auto_archiver_access WHERE file_id = 162;"
 
 # 輸出示例：
 # +---------+---------------------+----------+
@@ -619,13 +619,13 @@ docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
 # docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT COUNT(*) as total FROM oc_auto_archiver_access;"
 # 
 # 3. 檢查 file_id = 539 的記錄是否存在
-# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT * FROM oc_auto_archiver_access WHERE file_id = 539;"
+# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT * FROM oc_auto_archiver_access WHERE file_id = 162;"
 # 
 # 4. 如果記錄不存在，檢查檔案是否存在於 filecache
-# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT fileid, path FROM oc_filecache WHERE fileid = 539;"
+# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT fileid, path FROM oc_filecache WHERE fileid = 162;"
 # 
 # 5. 如果檔案存在但沒有訪問記錄，需要先訪問檔案或手動插入記錄：
-# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "INSERT INTO oc_auto_archiver_access (file_id, last_accessed) VALUES (539, UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY))) ON DUPLICATE KEY UPDATE last_accessed = UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY));"
+# docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "INSERT INTO oc_auto_archiver_access (file_id, last_accessed) VALUES (162, UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY))) ON DUPLICATE KEY UPDATE last_accessed = UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 23 DAY));"
 ```
 
 #### ▶️ 執行測試
@@ -645,7 +645,7 @@ docker compose exec app php occ background-job:list | grep -i notification
 
 ```bash
 # 使用 --force-execute 強制立即執行
-docker compose exec app php occ background-job:execute 125 --force-execute
+docker compose exec app php occ background-job:execute 113 --force-execute
 ```
 
 #### ✅ 驗證結果（後端）
@@ -679,7 +679,7 @@ docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
 
 ```bash
 docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
-  "SELECT file_id, user_id, decision, FROM_UNIXTIME(notified_at) as notified_at, file_path FROM oc_archiver_decisions WHERE file_id = 539;"
+  "SELECT file_id, user_id, decision, FROM_UNIXTIME(notified_at) as notified_at, file_path FROM oc_archiver_decisions WHERE file_id = 162;"
 
 # 輸出示例：
 # +---------+---------+----------+---------------------+-------------------+
@@ -1209,7 +1209,33 @@ docker compose exec app ls -lh /var/www/html/data/admin/files/*.bin
 # large_file_3.bin
 ```
 
-✅ **「不要封存」功能驗證完成！** 使用者選擇不封存後，檔案保持原樣。
+**步驟 5.5：驗證 StorageMonitorJob 尊重用戶決策（重要！）**
+
+```bash
+# 重新執行儲存監控任務
+docker compose exec app php occ background-job:execute 118 --force-execute
+
+# 查看日誌，應該看到系統尊重用戶決策
+docker compose exec app bash -c "tail -n 100 data/nextcloud.log | grep -i 'storagemonitor\|skip_archive'"
+
+# 應該看到：
+# [StorageMonitor] User 'admin' storage usage: 90% (Threshold: 80%)
+# [StorageMonitor] Found user decision: skip_archive (decided at 2024-11-28 15:30:45)
+# ℹ️  User chose 'skip_archive', will not automatically archive files
+# 💡 User needs to manually free up space or increase quota
+
+# 驗證檔案仍未被封存
+docker compose exec app ls -lh /var/www/html/data/admin/files/*.bin
+# 應該看到檔案仍然存在（未被封存）
+```
+
+**重要說明：**
+- ⏰ 「不要封存」決策有效期為 **24 小時**
+- ⏰ 24 小時後，如果使用率仍超過閾值，系統會重新發送通知
+- 💡 用戶可以再次選擇「不要封存」或讓系統自動封存
+- 🔄 「忽略」按鈕不會阻止自動封存，系統仍會繼續封存檔案
+
+✅ **「不要封存」功能驗證完成！** 使用者選擇不封存後，檔案保持原樣，且系統在 24 小時內不會自動封存。
 
 #### ▶️ 測試「忽略」功能（可選）
 
@@ -1277,8 +1303,10 @@ docker compose exec db mysql -u nextcloud -ppassword nextcloud -e \
 - ✅ 通知在 Nextcloud 通知中心顯示，包含使用率資訊
 - ✅ 通知下方有「不要封存」和「忽略」按鈕
 - ✅ 點擊「不要封存」後，決策記錄為 `skip_archive`，檔案保持原樣
+- ✅ 「不要封存」決策在 24 小時內有效，期間系統不會自動封存檔案
 - ✅ 點擊「忽略」後，通知被刪除，系統仍會自動封存以釋放空間
-- ✅ 24 小時內不會重複發送儲存空間警告通知
+- ✅ 24 小時內不會重複發送儲存空間警告通知（除非用戶清除決策記錄）
+- ✅ StorageMonitorJob 會檢查並尊重用戶的「不要封存」決策
 - ✅ 所有操作都有完整的日誌記錄
 
 ---
@@ -2158,6 +2186,128 @@ docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT fileid
 
 # 7. 使用實際存在的 file_id 進行測試
 ```
+
+---
+
+#### 問題 8：點擊任何檔案都無法將訪問記錄保存到資料庫
+
+**症狀：**
+- 點擊或打開任何檔案後，訪問記錄無法保存到 `oc_auto_archiver_access` 表
+- 執行查詢時表總是空的：`SELECT COUNT(*) FROM oc_auto_archiver_access;` 返回 0
+- 日誌中可能出現錯誤：`Call to undefined method OC\DB\QueryBuilder\QueryBuilder::closeCursor()`
+
+**原因分析：**
+
+在以下三個文件中，存在錯誤的 `closeCursor()` 調用方式：
+- `lib/Listener/FileReadListener.php`
+- `lib/Controller/PingController.php`
+- `lib/Listener/FileCreatedListener.php`
+
+**錯誤代碼示例：**
+
+```php
+$existing = $check->executeQuery()->fetch();
+$check->closeCursor();  // ❌ 錯誤：QueryBuilder 沒有 closeCursor() 方法
+```
+
+**正確代碼應該是：**
+
+```php
+$checkResult = $check->executeQuery();
+$existing = $checkResult->fetch();
+$checkResult->closeCursor();  // ✅ 正確：應在結果對象上調用
+```
+
+**診斷步驟：**
+
+##### 步驟 1：檢查錯誤日誌
+
+```bash
+# 檢查是否有 closeCursor 相關錯誤
+docker compose exec app bash -c "tail -n 100 data/nextcloud.log" | Select-String -Pattern "closeCursor"
+
+# 如果看到類似這樣的錯誤，即確認是這個問題：
+# "Call to undefined method OC\\DB\\QueryBuilder\\QueryBuilder::closeCursor()"
+```
+
+##### 步驟 2：測試文件訪問追蹤
+
+```bash
+# 1. 清空訪問記錄表
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "TRUNCATE TABLE oc_auto_archiver_access;"
+
+# 2. 在 Web UI 中打開任意檔案
+
+# 3. 檢查是否有新記錄被創建
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT COUNT(*) as total FROM oc_auto_archiver_access;"
+
+# 如果 total 仍為 0，則確認問題存在
+```
+
+**解決方案：**
+
+需要修復三個文件中的 `closeCursor()` 調用：
+
+**1. 修復 `lib/Listener/FileReadListener.php`：**
+
+找到 `upsertAccessTime()` 方法中的這段代碼：
+
+```php
+$existing = $check->executeQuery()->fetch();
+$check->closeCursor();
+```
+
+改為：
+
+```php
+$checkResult = $check->executeQuery();
+$existing = $checkResult->fetch();
+$checkResult->closeCursor();
+```
+
+**2. 修復 `lib/Controller/PingController.php`：**
+
+找到 `upsertAccessTime()` 方法中的相同錯誤，進行同樣的修改。
+
+**3. 修復 `lib/Listener/FileCreatedListener.php`：**
+
+找到 `upsertAccessTime()` 方法中的相同錯誤，進行同樣的修改。
+
+**修復後的驗證：**
+
+```bash
+# 1. 重新啟用應用
+docker compose exec app php occ app:disable auto_archiver
+docker compose exec app php occ app:enable auto_archiver
+
+# 2. 清空表（可選）
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "TRUNCATE TABLE oc_auto_archiver_access;"
+
+# 3. 在 Web UI 中打開幾個檔案
+
+# 4. 驗證記錄已成功創建
+docker compose exec db mysql -u nextcloud -ppassword nextcloud -e "SELECT * FROM oc_auto_archiver_access ORDER BY last_accessed DESC LIMIT 10;"
+
+# 應該看到訪問記錄
+# +----+---------+---------------+-----------+
+# | id | file_id | last_accessed | is_pinned |
+# +----+---------+---------------+-----------+
+# |  1 |       4 |    1732980426 |         0 |
+# |  2 |       5 |    1732980431 |         0 |
+# +----+---------+---------------+-----------+
+
+# 5. 檢查日誌，應該看到訪問檢測的日誌
+docker compose exec app bash -c "tail -n 50 data/nextcloud.log" | Select-String -Pattern "ACCESS DETECTED"
+```
+
+**技術說明：**
+
+在 Nextcloud/PHP 中：
+- `QueryBuilder::executeQuery()` 返回一個 `IResult` 對象
+- 只有 `IResult` 對象才有 `closeCursor()` 方法
+- `QueryBuilder` 本身沒有 `closeCursor()` 方法
+
+因此必須先將查詢結果保存到變量中，然後在該變量上調用 `closeCursor()`，而不能直接在 QueryBuilder 上調用。
 
 ---
 

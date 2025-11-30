@@ -45,8 +45,9 @@ class PingController extends Controller {
             $check->select('id', 'is_pinned')
                   ->from('auto_archiver_access')
                   ->where($check->expr()->eq('file_id', $check->createNamedParameter($fileId)));
-            $existing = $check->executeQuery()->fetch();
-            $check->closeCursor();
+            $checkResult = $check->executeQuery();
+            $existing = $checkResult->fetch();
+            $checkResult->closeCursor();
 
             if (!$existing) {
                 // Insert new record with default is_pinned = 0
