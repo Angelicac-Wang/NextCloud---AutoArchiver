@@ -322,23 +322,21 @@ class NotificationController extends Controller {
         
         $userId = $user->getUID();
         
-        $this->logger->info('[AutoArchiver] User chose to archive files for storage', [
-            'user_id' => $userId
-        ]);
+        $this->logger->warning('🚀 [AutoArchiver] User chose to archive files for storage (USER: ' . $userId . ')');
         
         try {
             // 記錄用戶決策：選擇封存
             $this->recordStorageDecision($userId, 'archive_now');
+            $this->logger->warning('✅ [AutoArchiver] Decision recorded: archive_now');
             
             // 刪除儲存空間警告通知
             $this->deleteStorageNotification($userId);
+            $this->logger->warning('✅ [AutoArchiver] Notification deleted');
             
             // 立即觸發封存操作（通過後台任務）
             $this->triggerStorageArchive($userId);
             
-            $this->logger->info('[AutoArchiver] Storage archive triggered successfully', [
-                'user_id' => $userId
-            ]);
+            $this->logger->warning('✅ [AutoArchiver] Storage archive triggered successfully for user: ' . $userId);
             
             return new JSONResponse([
                 'success' => true,
@@ -346,9 +344,10 @@ class NotificationController extends Controller {
             ]);
             
         } catch (\Exception $e) {
-            $this->logger->error('[AutoArchiver] Failed to trigger storage archive', [
+            $this->logger->error('❌ [AutoArchiver] Failed to trigger storage archive', [
                 'user_id' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             
             return new JSONResponse([
@@ -448,54 +447,48 @@ class NotificationController extends Controller {
      * 記錄儲存空間決策
      */
     private function recordStorageDecision(string $userId, string $decision): void {
+        $this->logger->warning('📝 [AutoArchiver] Recording storage decision: ' . $decision . ' for user: ' . $userId);
+        
+        // 先刪除該用戶所有舊的 storage_warning 相關決策
         $qb = $this->db->getQueryBuilder();
+        $qb->delete('archiver_decisions')
+            ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+            ->andWhere($qb->expr()->eq('file_path', $qb->createNamedParameter('storage_warning')));
+        $deleteCount = $qb->execute();
         
-        // 檢查是否已有記錄
-        $qb->select('id')
-            ->from('archiver_decisions')
-            ->where($qb->expr()->eq('file_id', $qb->createNamedParameter(0)))
-            ->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
-            ->andWhere($qb->expr()->eq('decision', $qb->createNamedParameter('storage_warning_pending')));
-        $result = $qb->executeQuery();
-        $existing = $result->fetch();
-        $result->closeCursor();
+        $this->logger->warning('🗑️  [AutoArchiver] Deleted ' . $deleteCount . ' old storage_warning decisions for user: ' . $userId);
         
-        if ($existing) {
-            // 更新現有記錄
-            $qb = $this->db->getQueryBuilder();
-            $qb->update('archiver_decisions')
-                ->set('decision', $qb->createNamedParameter($decision))
-                ->set('decided_at', $qb->createNamedParameter(time()))
-                ->where($qb->expr()->eq('file_id', $qb->createNamedParameter(0)))
-                ->andWhere($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)));
-            $qb->execute();
-        } else {
-            // 創建新記錄
-            $qb = $this->db->getQueryBuilder();
-            $qb->insert('archiver_decisions')
-                ->values([
-                    'file_id' => $qb->createNamedParameter(0),
-                    'user_id' => $qb->createNamedParameter($userId),
-                    'decision' => $qb->createNamedParameter($decision),
-                    'notified_at' => $qb->createNamedParameter(time()),
-                    'decided_at' => $qb->createNamedParameter(time()),
-                    'file_path' => $qb->createNamedParameter('storage_warning'),
-                ]);
-            $qb->execute();
-        }
+        // 創建新的決策記錄
+        $qb = $this->db->getQueryBuilder();
+        $qb->insert('archiver_decisions')
+            ->values([
+                'file_id' => $qb->createNamedParameter(0),
+                'user_id' => $qb->createNamedParameter($userId),
+                'decision' => $qb->createNamedParameter($decision),
+                'notified_at' => $qb->createNamedParameter(time()),
+                'decided_at' => $qb->createNamedParameter(time()),
+                'file_path' => $qb->createNamedParameter('storage_warning'),
+            ]);
+        $qb->execute();
+        
+        $this->logger->warning('✅ [AutoArchiver] Successfully recorded new storage decision: ' . $decision . ' for user: ' . $userId);
     }
     
     /**
      * 刪除儲存空間警告通知
      */
     private function deleteStorageNotification(string $userId): void {
+        $this->logger->warning('🗑️  [AutoArchiver] Deleting storage notification for user: ' . $userId);
+        
         $qb = $this->db->getQueryBuilder();
         $qb->delete('notifications')
             ->where($qb->expr()->eq('app', $qb->createNamedParameter('auto_archiver')))
             ->andWhere($qb->expr()->eq('user', $qb->createNamedParameter($userId)))
             ->andWhere($qb->expr()->eq('object_type', $qb->createNamedParameter('storage')))
             ->andWhere($qb->expr()->eq('object_id', $qb->createNamedParameter($userId)));
-        $qb->execute();
+        $deleteCount = $qb->execute();
+        
+        $this->logger->warning('✅ [AutoArchiver] Deleted ' . $deleteCount . ' storage notifications for user: ' . $userId);
     }
 }
 

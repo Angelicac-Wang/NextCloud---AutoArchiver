@@ -63,21 +63,28 @@ class StorageMonitorJob extends TimedJob {
                 $this->logger->warning("⚠️ [StorageMonitor] User '{$user->getUID()}' storage usage: {$usageInfo['usagePercent']}% (Threshold: {$thresholdPercent}%)");
                 $this->logger->warning("   Used: {$usageInfo['usedFormatted']} / {$usageInfo['quotaFormatted']}");
                 
-                // 發送儲存空間警告通知（24小時內只發送一次）
-                $this->sendStorageWarningNotification($user, $usageInfo);
-                
-                // 檢查用戶是否選擇不要封存
+                // 檢查用戶的決策
                 $userDecision = $this->getUserStorageDecision($user->getUID());
                 
                 if ($userDecision === 'skip_archive') {
+                    // 用戶選擇不要封存
                     $this->logger->warning("   ℹ️  User chose 'skip_archive', will not automatically archive files");
                     $this->logger->warning("   💡 User needs to manually free up space or increase quota");
-                } else {
+                } elseif ($userDecision === 'archive_now') {
+                    // 用戶選擇立即封存
+                    $this->logger->warning("   ✅ User chose 'archive_now', starting automatic archiving");
+                    
                     // 開始封存最久未使用的檔案
                     $archivedCount = $this->archiveUntilBelowThreshold($user, $usageInfo);
                     $totalFilesArchived += $archivedCount;
                     
                     $this->logger->warning("   ✅ Archived {$archivedCount} files to reduce storage usage");
+                    
+                    // 保留決策記錄，不自動清除（方便查看歷史記錄）
+                    // $this->clearStorageDecision($user->getUID(), 'archive_now');
+                } elseif ($userDecision === null || $userDecision === 'storage_warning_pending') {
+                    // 尚未決策或等待中，發送通知（24小時內只發送一次）
+                    $this->sendStorageWarningNotification($user, $usageInfo);
                 }
             }
         }
@@ -465,27 +472,31 @@ class StorageMonitorJob extends TimedJob {
                     $node->delete();
                     $this->logger->warning("🗑️ [StorageMonitor] Original file deleted to free up space");
                     
-                    // 手動計算可用空間：刪除原文件後，空間應該增加（原文件大小 - ZIP 文件大小）
-                    // 因為 ZIP 文件比原文件小，所以刪除原文件後，可用空間應該增加
-                    $spaceFreed = $fileSize - $actualZipSize; // 釋放的空間
-                    $estimatedAvailableSpace = $availableSpace + $spaceFreed;
+                    // 正確計算刪除原文件後的可用空間
+                    // 新的已用空間 = 當前已用 - 原文件大小
+                    $newUsed = $currentUsed - $fileSize;
+                    // 新的可用空間 = 配額 - 新的已用空間
+                    $estimatedAvailableSpace = $quotaBytes - $newUsed;
                     
                     $this->logger->warning("📊 [StorageMonitor] Space calculation after deletion:");
+                    $this->logger->warning("   Quota: " . $this->formatBytes($quotaBytes));
+                    $this->logger->warning("   Current used (before delete): " . $this->formatBytes($currentUsed));
                     $this->logger->warning("   Original file size: " . $this->formatBytes($fileSize));
+                    $this->logger->warning("   New used (after delete): " . $this->formatBytes($newUsed));
                     $this->logger->warning("   ZIP file size: " . $this->formatBytes($actualZipSize));
-                    $this->logger->warning("   Space freed: " . $this->formatBytes($spaceFreed));
                     $this->logger->warning("   Estimated available: " . $this->formatBytes($estimatedAvailableSpace));
                     
-                    // 因為 ZIP 文件比原文件小，刪除原文件後應該總是有足夠空間
-                    // 但我們還是檢查一下，以防萬一
+                    // 檢查是否有足夠空間存放 ZIP 文件
                     if ($estimatedAvailableSpace < $actualZipSize) {
-                        $this->logger->error("❌ [StorageMonitor] Unexpected: Still not enough space after deletion. This should not happen!");
+                        $this->logger->error("❌ [StorageMonitor] Still not enough space after deletion!");
                         $this->logger->error("   Required: " . $this->formatBytes($actualZipSize) . ", Available: " . $this->formatBytes($estimatedAvailableSpace));
+                        $this->logger->error("   This indicates quota is too small for archiving this file.");
                         unlink($tempZipPath);
                         return false;
                     }
                     
                     $availableSpace = $estimatedAvailableSpace;
+                    $this->logger->warning("✅ [StorageMonitor] Enough space available after deletion, proceeding with upload");
                 }
                 
                 // 將壓縮文件上傳到 Archive 資料夾
@@ -726,6 +737,8 @@ class StorageMonitorJob extends TimedJob {
     /**
      * 獲取用戶的儲存空間決策
      * 返回 'skip_archive' 表示用戶選擇不要封存
+     * 返回 'archive_now' 表示用戶選擇立即封存
+     * 返回 'storage_warning_pending' 表示等待用戶決策
      * 返回 null 表示用戶未做決策或決策已過期（24小時）
      */
     private function getUserStorageDecision(string $userId): ?string {
@@ -734,7 +747,6 @@ class StorageMonitorJob extends TimedJob {
             ->from('archiver_decisions')
             ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
             ->andWhere($qb->expr()->eq('file_path', $qb->createNamedParameter('storage_warning')))
-            ->andWhere($qb->expr()->eq('decision', $qb->createNamedParameter('skip_archive')))
             ->andWhere($qb->expr()->gt('decided_at', $qb->createNamedParameter(time() - 86400))) // 24小時內有效
             ->orderBy('decided_at', 'DESC')
             ->setMaxResults(1);
@@ -744,11 +756,26 @@ class StorageMonitorJob extends TimedJob {
         $result->closeCursor();
         
         if ($row) {
-            $this->logger->info('[StorageMonitor] Found user decision: skip_archive (decided at ' . date('Y-m-d H:i:s', $row['decided_at']) . ')');
-            return 'skip_archive';
+            $decision = $row['decision'];
+            $this->logger->info('[StorageMonitor] Found user decision: ' . $decision . ' (decided at ' . date('Y-m-d H:i:s', $row['decided_at']) . ')');
+            return $decision;
         }
         
         return null;
+    }
+    
+    /**
+     * 清除用戶的儲存空間決策
+     */
+    private function clearStorageDecision(string $userId, string $decision): void {
+        $qb = $this->db->getQueryBuilder();
+        $qb->delete('archiver_decisions')
+            ->where($qb->expr()->eq('user_id', $qb->createNamedParameter($userId)))
+            ->andWhere($qb->expr()->eq('file_path', $qb->createNamedParameter('storage_warning')))
+            ->andWhere($qb->expr()->eq('decision', $qb->createNamedParameter($decision)));
+        $qb->execute();
+        
+        $this->logger->info('[StorageMonitor] Cleared user decision: ' . $decision . ' for user ' . $userId);
     }
 }
 
